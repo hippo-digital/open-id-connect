@@ -1,0 +1,31 @@
+---
+users:
+    '182677611564':
+        sso_ticket: 'AQIC5wM2LY4SfcwBFg/H/AD2bp/ibV6jkdmikWHH593T0/A=@AAJTSQACMDI=#'
+        subject_name: 'PCT RA-Agent'
+        roles:
+            0:
+                id: '000000000001'
+                organisation: 'TEST HEALTH ORG 1'
+                type: 'Admin'
+                subtype: 'Admin & Clerical'
+                name: 'Mental Health Nurse'
+                cn: 'TEST USER 1'
+            1:
+                id: '000000000002'
+                organisation: 'TEST HEALTH ORG 1'
+                type: 'Admin'
+                subtype: 'Admin & Clerical'
+                name: 'Health Care Assistant'
+                cn: 'TEST USER 1'
+    'default':
+        sso_ticket: 'AQIC5wM2LY4Sfcy29Ss8LS1yce+o2OrTwQMJDviDPBa8J6s=@AAJTSQACMDI=#'
+        subject_name: 'USER 1'
+        roles:
+            0:
+                id: '000000000003'
+                organisation: 'TEST HEALTH ORG 1'
+                type: 'Admin'
+                subtype: 'Admin & Clerical'
+                name: 'Mental Health Nurse'
+                cn: 'TEST USER 1'

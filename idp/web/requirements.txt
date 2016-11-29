@@ -1,0 +1,5 @@
+flask
+pyyaml
+redis
+python-jose
+ldap3

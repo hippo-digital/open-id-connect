@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE USER SYSTEM "https://gas.nis1.national.ncrs.nhs.uk/login/dtd">
+<gpOBJECT>
+<gpPARAM name="log_session_id">r8OrAcRvtV</gpPARAM>
+<gpPARAM name="server_ip">{{ validate_data.server_ip }}</gpPARAM>
+<gpPARAM name="sso_logout_url">{{ validate_data.service_url }}/login/authlogout</gpPARAM>
+<gpPARAM name="cn">{{ validate_data.subject_name }}</gpPARAM>
+<gpPARAM name="error_url">https://nisu010-uksr-app1.nis.nhs.uk:443/login/error</gpPARAM>
+<gpPARAM name="gas_version">5.2.7</gpPARAM>
+<gpPARAM name="sso_ticket">{{ validate_data.sso_ticket }}</gpPARAM>
+<gpPARAM name="sso_domain">.nis.nhs.uk</gpPARAM>
+<gpPARAM name="sso_session_url">https://nisu010-uksr-app1.nis.nhs.uk:443/login/ssoupdate</gpPARAM>
+<gpPARAM name="sso_max_session_time">600</gpPARAM>
+<gpPARAM name="sso_keep_alive">false</gpPARAM>
+{% for role in validate_data.roles %}
+<gpPARAM name="nhsjobrole{{ role.index }}" id="{{ role.id }}">{{ role.organisation }}, "{{ role.subtype }}":"{{ role.type }}":"{{ role.name }}"</gpPARAM>
+{% endfor %}
+<gpPARAM name="sso_session_time">300</gpPARAM>
+<gpPARAM name="auth_method">3</gpPARAM>
+<gpPARAM name="app_url">NHST</gpPARAM>
+<gpPARAM name="service">AUTHENTICATION</gpPARAM>
+</gpOBJECT>

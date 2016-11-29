@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE USER SYSTEM "https://gas.nis1.national.ncrs.nhs.uk/login/dtd">
+<gpOBJECT>
+<gpPARAM name="gas_version">5.2.7</gpPARAM>
+<gpPARAM name="signature">{{ activate_data.signature }}</gpPARAM>
+<gpPARAM name="server_ip">{{ activate_data.server_ip }}</gpPARAM>
+<gpPARAM name="ssp_url"></gpPARAM>
+<gpPARAM name="app_url">NHST</gpPARAM>
+<gpPARAM name="log_session_id">SiiaFOx6qV</gpPARAM>
+<gpPARAM name="service">ACTIVATION</gpPARAM>
+<gpPARAM name="error_url">https://nisu010-uksr-app1.nis.nhs.uk:443/login/error</gpPARAM>
+<gpPARAM name="ticket"></gpPARAM>
+<gpPARAM name="auth_method">3</gpPARAM>
+<gpPARAM name="reply_url">{{ activate_data.service_url }}/login/authvalidate</gpPARAM>
+<gpPARAM name="challenge">{{ activate_data.challenge }}</gpPARAM>
+<gpPARAM name="download_gac_url">http://www.gemauth.com/authclient</gpPARAM>
+<gpPARAM name="latest_gac_version">3.9.1</gpPARAM>
+</gpOBJECT>
