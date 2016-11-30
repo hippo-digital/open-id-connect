@@ -96,7 +96,7 @@ def login():
 
             for attribute in ['givenName', 'sn', 'mail']:
                 if attribute in user_object.entry_attributes_as_dict:
-                    ses.set_claims({attribute: user_object.entry_attributes_as_dict[attribute]})
+                    ses.set_claims({attribute: user_object.entry_attributes_as_dict[attribute][0]})
 
             user_connection.unbind()
 
