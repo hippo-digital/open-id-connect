@@ -1,4 +1,6 @@
 from flask import Flask, request, render_template, redirect
+from auth_flow_session import auth_flow_session
+from tokenrequest import tokenrequest
 
 import logging, os
 from storage import storage
@@ -38,17 +40,13 @@ def log_request():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    from authrequest import authrequest
-
-    ar = None
-
-    # uri = request.headers.get('redirect_uri')
+    ses = auth_flow_session()
 
     if 'scope' in request.args \
             and 'response_type' in request.args \
             and 'client_id' in request.args \
             and 'redirect_uri' in request.args:
-        ar = authrequest(request.args['client_id'],
+        ses.create(request.args['client_id'],
                          request.args['scope'],
                          request.args['response_type'],
                          request.args['redirect_uri'],
@@ -59,45 +57,46 @@ def login():
             and 'response_type' in request.headers \
             and 'client_id' in request.headers \
             and 'redirect_uri' in request.headers:
-        ar = authrequest(request.headers.get('client_id'),
+        ses.create(request.headers.get('client_id'),
                          request.headers.get('scope'),
                          request.headers.get('response_type'),
                          request.headers.get('redirect_uri'),
                          request.headers.get('state'),
                          nonce=None if 'nonce' not in request.headers else request.headers.get('nonce'))
 
-    elif 'client_id' in request.args and 'code' in request.args:
-        ar = authrequest(client_id=request.args['client_id'], code=request.args['code'])
 
-    if not ar.validated_client:
-        return '<html>Invalid client ID</html>'
+    elif 'code' in request.args:
+#        ar = authrequest(client_id=request.args['client_id'], code=request.args['code'])
+        ses.load(request.args['code'])
+
+    # if not ar.validated_client:
+    #     return '<html>Invalid client ID</html>'
 
 
     if 'username' not in request.form or 'password' not in request.form:
-        return render_template('auth.html',
-                               header_string='client_id=%s&code=%s' % (
-                               ar.client_id, ar.code))
+        return render_template('auth.html', header_string='code=%s' % (ses.code), username_value='', username_error='', password_error='')
     else:
         username = request.form['username']
         password = request.form['password']
 
-        directory_server = ldap3.Server('192.168.1.154')
-        directory_connection = ldap3.Connection(directory_server, user='uid=alewis,cn=users,dc=sdh,dc=local', password='Password4')
+        directory_server = ldap3.Server('10.211.55.8')
+        directory_connection = ldap3.Connection(directory_server, user='cn=admin,dc=hd,dc=local', password='Password1')
         directory_connection.bind()
 
-        directory_connection.search('uid=%s,cn=users,dc=sdh,dc=local' % username, '(objectclass=person)', attributes=ldap3.ALL_ATTRIBUTES)
+        directory_connection.search('uid=%s,cn=users,dc=hd,dc=local' % username, '(objectclass=person)', attributes=ldap3.ALL_ATTRIBUTES)
 
         is_authenticated = False
 
         if len(directory_connection.entries) != 1:
-            return '<html>Unrecognised user</html>'
+            return render_template('auth.html', header_string='code=%s' % (ses.code), username_value=username, username_error='Unrecognised username', password_error='')
         else:
             user_object = directory_connection.entries[0]
             user_connection = ldap3.Connection(directory_server, user=user_object.entry_dn, password=password, auto_bind=True)
             is_authenticated = user_connection.bound
-            ar.session_state['given_name'] = user_object.entry_attributes_as_dict['givenName'][0]
-            ar.session_state['family_name'] = user_object.entry_attributes_as_dict['sn'][0]
-            ar.session_state['email'] = user_object.entry_attributes_as_dict['mail'][0]
+
+            for attribute in ['givenName', 'sn', 'mail']:
+                if attribute in user_object.entry_attributes_as_dict:
+                    ses.set_claims({attribute: user_object.entry_attributes_as_dict[attribute]})
 
             user_connection.unbind()
 
@@ -119,19 +118,23 @@ def login():
 
 
         if not is_authenticated:
-            return '<html>Incorrect password</html>'
+            return render_template('auth.html', header_string='code=%s' % (ses.code), username_value=username, username_error='', password_error='Incorrect password entered, please try again.')
 
+        # ar.set_user(username)
+        ses.set_claims({'sub': username})
 
-        ar.set_user(username)
+        response = redirect("%s%scode=%s&state=%s" % (ses.redirect_uri, '&' if '?' in ses.redirect_uri else '?', ses.code, ses.state), code=302)
 
-        response = redirect("%s%scode=%s&state=%s" % (ar.session_state['redirect_uri'], '&' if '?' in ar.session_state['redirect_uri'] else '?', ar.code, ar.session_state['state']), code=302)
-
-        for key, val in ar.__dict__.items():
+        for key, val in ses.__dict__.items():
             response.headers.add(key, val)
 
         response.headers['state'] = state
 
+        ses.save()
+
         return response
+
+
 
 
 @app.route('/endpoint', methods=['GET', 'POST'])
@@ -140,30 +143,24 @@ def endpoint():
 
 @app.route('/token', methods=['GET', 'POST'])
 def token():
-    from tokenrequest import tokenrequest
+
 
     tr = None
     token = ''
 
     if 'grant_type' in request.form \
             and 'code' in request.form \
-            and 'redirect_uri' in request.form:
+            and 'redirect_uri' in request.form \
+            and 'client_id' in request.form \
+            and 'client_secret' in request.form:
 
         tr = tokenrequest(request.form['grant_type'],
                           request.form['code'],
                           request.form['redirect_uri'],
-                          request.form['client_id'])
+                          request.form['client_id'],
+                          request.form['client_secret'])
 
         token = tr.get()
-
-    # POST /token HTTP/1.1
-    # Host: openid.c2id.com
-    # Content-Type: application/x-www-form-urlencoded
-    # Authorization: Basic czZCaGRSa3F0MzpnWDFmQmF0M2JW
-    #
-    # grant_type=authorization_code
-    #  &code=SplxlOBeZQQYbYS6WxSbIA
-    #  &redirect_uri=https%3A%2F%2Fclient.example.org%2Fcb
 
     return token
 

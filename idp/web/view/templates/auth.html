@@ -1,16 +1,34 @@
 <!DOCTYPE html>
+    <html lang="en">
+        <head>
+            <title>Hippo Digital Login</title>
+            <meta name="viewport" content="width=device-width, initial-scale=1">
+            <link rel="stylesheet" media="screen" href="../static/default.css" />
+            <link rel="stylesheet" media="print" type="text/css" href="./css/main-print.css">
+        </head>
+        <body>
+            <div class="loginbox">
+                <div class="topbanner">
+                    <img class="toplogo" src="../static/hippo-logo-wt.png">
+                </div>
 
-<html>
-<head>
-    <title>Login</title>
-</head>
+                <form action="/login?{{ header_string }}" method="POST">
+                    <div class="inputarea">
+                        <input class="inputbox" type="text" name="username" placeholder="Username" value="{{ username_value }}"><br/>
+                        <div class="errortext" id="usernameerror">{{ username_error }}</div>
+                    </div>
 
+                    <div class="inputarea">
+                        <input class="inputbox" type="password" name="password" placeholder="Password"><br/>
+                        <div class="errortext" id="passworderror">{{ password_error }}</div>
+                    </div>
 
-<body>
-    <form action="/login?{{ header_string }}" method="POST">
-        Username: <input type="text" name="username"><br/>
-        Password: <input type="password" name="password"><br/>
-        <input type="submit"><br/>
-    </form>
-</body>
-</html>
+                    <input class="loginbutton" type="submit" value="Log in"><br/>
+                </form>
+
+                <div class="forgottenpassword">
+                    <a class="forgottenpasswordlink" href="/forgottenpassword">Forgotten password</a>
+                </div>
+            </div>
+        </body>
+    </html>

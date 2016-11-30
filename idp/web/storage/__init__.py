@@ -71,3 +71,6 @@ class storage:
 
     def keys(pattern):
         return storage.__redisconnection.keys(pattern)
+
+    def expire(key, time):
+        storage.__redisconnection.expire(key, time)
