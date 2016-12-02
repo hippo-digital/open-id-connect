@@ -39,7 +39,7 @@ class auth_flow_session:
 
     def _persist(self):
         storage.set('sessions_%s' % self.code, json.dumps(self.__dict__))
-        storage.expire('sessions_%s' % self.code, 60)
+        storage.expire('sessions_%s' % self.code, 3600) # 1 hour
 
     def _retrieve(self):
         state = json.loads(storage.get('sessions_%s' % self.code))

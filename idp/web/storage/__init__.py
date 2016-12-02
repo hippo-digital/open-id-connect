@@ -1,9 +1,3 @@
-import sys
-#import logging
-
-# sys.path.append('/var/www/homeautomation/web')
-# log = logging.getLogger('sotw.storage')
-
 import redis
 
 
