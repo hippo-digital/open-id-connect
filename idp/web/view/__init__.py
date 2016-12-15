@@ -1,18 +1,28 @@
-from flask import Flask, request, render_template, redirect
+from flask import Flask, request, render_template, redirect, abort
 from auth_flow_session import auth_flow_session
 from tokenrequest import tokenrequest
 from ldap_authenticator import ldap_authenticator
 import logging, os
 from storage import storage
 import yaml
+import string
+import random
+import hashlib
+import json
+
 
 app = Flask(__name__)
 
 
 @app.before_request
 def log_request():
-    log.info('Method=BeforeRequest URL=%s ClientIP=%s Method=%s Proto=%s UserAgent=%s Arguments=%s Form=%s Data=%s'
-             % (request.url,
+    transaction_id = ''.join([random.choice(string.ascii_letters + string.digits) for n in range(6)])
+    request.environ['transaction_id'] = transaction_id
+
+    log.info('Method=BeforeRequest Transaction=%s RequestMethod=%s URL=%s ClientIP=%s Method=%s Proto=%s UserAgent=%s Arguments=%s Form=%s Data=%s'
+             % (transaction_id,
+                request.method,
+                request.url,
                 request.headers.environ['REMOTE_ADDR'] if 'REMOTE_ADDR' in request.headers.environ else 'NULL',
                 request.headers.environ['REQUEST_METHOD'],
                 request.headers.environ['SERVER_PROTOCOL'],
@@ -24,58 +34,93 @@ def log_request():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    log_header = 'Method=login Transaction=%s' % (request.environ['transaction_id'])
+    log.info(log_header + ' Message=Method Called')
+
+    fields = get_all_fields(request)
+
+    log.info(log_header + ' Message=Fields received Fields=%s' % fields)
+
     ses = auth_flow_session()
 
-    if 'scope' in request.args \
-            and 'response_type' in request.args \
-            and 'client_id' in request.args \
-            and 'redirect_uri' in request.args \
-            and 'state' in request.args:
-        ses.create(request.args['client_id'],
-                         request.args['scope'],
-                         request.args['response_type'],
-                         request.args['redirect_uri'],
-                         request.args['state'],
-                         nonce=None if 'nonce' not in request.args else request.args['nonce'])
+    if 'scope' in fields \
+            and 'response_type' in fields \
+            and 'client_id' in fields \
+            and 'redirect_uri' in fields \
+            and 'state' in fields:
+        # log.info(log_header + ' Message=Creating Session')
 
-    elif 'scope' in request.headers \
-            and 'response_type' in request.headers \
-            and 'client_id' in request.headers \
-            and 'redirect_uri' in request.headers \
-            and 'state' in request.headers:
-        ses.create(request.headers.get('client_id'),
-                         request.headers.get('scope'),
-                         request.headers.get('response_type'),
-                         request.headers.get('redirect_uri'),
-                         request.headers.get('state'),
-                         nonce=None if 'nonce' not in request.headers else request.headers.get('nonce'))
+        if not check_client_auth(fields['client_id']):
+            log.info(log_header + ' Message=ClientID not recognised ClientID=%s' % fields['client_id'])
+            return json.dumps({'error': 'unauthorized_client'}), 400
 
-    elif 'code' in request.args:
-        ses.load(request.args['code'])
+        if not check_scope(fields['scope']):
+            log.info(log_header + ' Message=Invalid scope provided Scope=%s' % fields['scope'])
+            return json.dumps({'error': 'invalid_scope'}), 400
 
-    if 'username' not in request.form or 'password' not in request.form:
+        if not check_response_type(fields['response_type']):
+            log.info(log_header + ' Message=Invalid response type ResponseType=%s' % fields['response_type'])
+            return json.dumps({'error': 'unsupported_response_type'}), 400
+
+        if not check_state(fields['state']):
+            log.info(log_header + ' Message=Invalid state State=%s' % fields['state'])
+            return json.dumps({'error': 'invalid_request'}), 400
+
+        ses.create(fields['client_id'],
+                   fields['scope'],
+                   fields['response_type'],
+                   fields['redirect_uri'],
+                   fields['state'],
+                   nonce=None if 'nonce' not in fields else fields['nonce'])
+
+        log.info(log_header + ' Message=Created Session Session=%s' % ses.__dict__)
+
+        log.info(log_header + ' Message=Returning authentication form')
         return render_template('auth.html', header_string='code=%s' % (ses.code), username_value='', username_error='', password_error='')
-    else:
+
+    elif 'code' in fields \
+            and 'username' in request.form \
+            and 'password' in request.form:
+
+        log.info(log_header + ' Message=Code received, loading session Code=%s' % fields['code'])
+        ses.load(fields['code'])
+        log.info(log_header + ' Message=Session loaded for code Code=%s Session=%s' % (fields['code'], ses.__dict__))
+
         username = request.form['username']
         password = request.form['password']
+        hashed_password = hashlib.md5(password.encode('utf-8')).hexdigest()
 
+        log.info(log_header + ' Message=Username and/or password received Username=%s Password=%s' % (
+        request.form['username'], hashed_password))
+
+        log.info(log_header + ' Message=Validating username/password against LDAP')
         auth = ldapauth.verify_user(username, password)
+        log.info(log_header + ' Message=LDAP validation returned AuthStatus=%s' % auth['success'])
 
         if not auth['success']:
+            log.info(log_header + ' Message=Returning login form with auth failure status')
             return render_template('auth.html', header_string='code=%s' % (ses.code), username_value=username,
-                                   username_error='Incorrect username and/or password entered, please try again.', password_error='')
+                                   username_error='Incorrect username and/or password entered, please try again.',
+                                   password_error='')
 
+        log.info(log_header + ' Message=Setting username claim Username=%s' % username)
         ses.set_claims({'sub': username})
+
+        log.info(log_header + ' Message=Setting other claims Claims=%s' % auth['claims'])
         ses.set_claims(auth['claims'])
 
-        response = redirect("%s%scode=%s&state=%s" % (ses.redirect_uri, '&' if '?' in ses.redirect_uri else '?', ses.code, ses.state), code=302)
-
-        for key, val in ses.__dict__.items():
-            response.headers.add(key, val)
+        response = redirect(
+            "%s%scode=%s&state=%s" % (ses.redirect_uri, '&' if '?' in ses.redirect_uri else '?', ses.code, ses.state),
+            code=302)
+        log.info(log_header + ' Message=Response prepared URI=%s' % (response.location))
 
         ses.save()
 
         return response
+
+    else:
+        log.info(log_header + ' Message=Required fields missing Fields=%s' % fields)
+        return json.dumps({'error': 'invalid_request'}), 400
 
 
 @app.route('/endpoint', methods=['GET', 'POST'])
@@ -83,8 +128,10 @@ def endpoint():
     return '{"sub": "Keith"}'
 
 
-@app.route('/token', methods=['GET', 'POST'])
+@app.route('/token', methods=['POST'])
 def token():
+    log_header = 'Method=token Transaction=%s' % (request.environ['transaction_id'])
+    log.info(log_header + ' Message=Method Called')
     token = ''
 
     if 'grant_type' in request.form \
@@ -93,15 +140,102 @@ def token():
             and 'client_id' in request.form \
             and 'client_secret' in request.form:
 
+        log.info(log_header + ' Message=Require fields included Form=%s' % request.form)
+
+        if not check_client_auth(request.form['client_id'], request.form['client_secret']):
+            log.info(log_header + ' Message=Invalid Client Authentication, returning error Client_ID=%s Client_Secret=%s' % (request.form['client_id'], request.form['client_secret']))
+            return json.dumps({'error': 'invalid_client'}), 400
+
+        if not check_code(request.form['code']):
+            log.info(log_header + ' Message=Invalid Code, returning error Code=%s' % request.form['code'])
+            return json.dumps({'error': 'invalid_grant'}), 400
+
+        if not check_grant_type(request.form['grant_type']):
+            log.info(log_header + ' Message=Invalid Grant Type, returning error GrantType=%s' % request.form['grant_type'])
+            return json.dumps({'error': 'unsupported_grant_type'}), 400
+
+        log.info(log_header + ' Message=Creating new token request')
         tr = tokenrequest(request.form['grant_type'],
                           request.form['code'],
                           request.form['redirect_uri'],
                           request.form['client_id'],
                           request.form['client_secret'])
 
+        log.info(log_header + ' Message=Getting token')
         token = tr.get()
 
-    return token
+        log.info(log_header + ' Message=Returning token Token=%s' % token)
+        return token
+
+    else:
+        log.info(log_header + ' Message=Required fields not supplied, returning error Form=%s' % request.form)
+        return json.dumps({'error': 'invalid_request'}), 400
+
+
+def check_client_auth(client_id, client_secret=None):
+    if client_id not in config['clients']:
+        return False
+
+    stored_client_password_hash = config['clients'][client_id]
+
+    if stored_client_password_hash == None:
+        return False
+    else:
+        if client_secret != None:
+            expected_client_password_hash = hashlib.sha512(('%s.%s' % (client_id, client_secret)).encode('utf-8')).hexdigest()
+
+            if expected_client_password_hash == stored_client_password_hash:
+                return True
+
+            return False
+
+    return True
+
+def check_code(code):
+    if len(code) != 16:
+        return False
+
+    if storage.get('sessions_%s' % code) == None:
+        return False
+
+    return True
+
+def check_grant_type(grant_type):
+    return grant_type == 'authorization_code'
+
+def check_scope(scope):
+    return 'openid' in scope
+
+def check_response_type(response_type):
+    return response_type == 'code'
+
+def check_state(state):
+    return len(state) > 0 and len(state) < 1024
+
+
+def get_all_fields(request):
+    fields = {}
+    accepted_keys = ['client_id',
+                     'client_secret',
+                     'code',
+                     'grant_type',
+                     'nonce',
+                     'redirect_uri',
+                     'response_type',
+                     'scope',
+                     'state']
+
+    for key, value in request.args.items():
+        if key.lower() in accepted_keys:
+            fields[key.lower()] = value
+
+    for key, value in request.form.items():
+        if key.lower() in accepted_keys:
+            fields[key.lower()] = value
+
+    return fields
+
+
 
 
 def loadconfig():
@@ -110,6 +244,12 @@ def loadconfig():
         config = yaml.load(cfgstream)
         return config
 
+
+class InvalidTokenRequest(Exception):
+    pass
+
+class ClientAuthenticationFailure(Exception):
+    pass
 
 
 log = logging.getLogger('idp')

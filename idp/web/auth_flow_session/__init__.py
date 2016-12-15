@@ -1,6 +1,7 @@
 from storage import storage
 import json
-import uuid
+import random, string
+import logging
 
 class auth_flow_session:
     def create(self,
@@ -10,6 +11,10 @@ class auth_flow_session:
                  redirect_uri=None,
                  state=None,
                  nonce=None):
+
+        log_header = 'Method=************** Message=Method Called'
+        logging.info(log_header)
+
         self.client_id = client_id
         self.scope = scope
         self.response_type = response_type
@@ -19,7 +24,8 @@ class auth_flow_session:
         self.nonce = nonce
 
         self.claims = {}
-        self.code = uuid.uuid4().hex
+        self.code = ''.join([random.choice(string.ascii_letters + string.digits) for n in range(16)]) #uuid.uuid4().hex
+        logging.info(log_header + ' Code=%s' % self.code)
 
         self._persist()
 
@@ -32,9 +38,10 @@ class auth_flow_session:
             self.claims[key] = value
 
     def create_access_token(self):
-        self.access_token = uuid.uuid4().hex
+        self.access_token = ''.join([random.choice(string.ascii_letters + string.digits) for n in range(16)]) #uuid.uuid4().hex
 
     def save(self):
+        # log.info('PERSISTING')
         self._persist()
 
     def _persist(self):
