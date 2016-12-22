@@ -13,4 +13,7 @@ formatter = logging.Formatter('%(asctime)s %(name)s %(levelname)s %(message)s')
 fh.setFormatter(formatter)
 log.info("Run server started")
 
-app.run(debug=True, host='0.0.0.0', threaded=True)
+if __name__ == "__main__":
+    app.run(debug=True, host='0.0.0.0', threaded=True)
+
+
