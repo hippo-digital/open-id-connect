@@ -1,0 +1,42 @@
+---
+- name: Add Python Apt Repo
+  apt_repository: repo='ppa:fkrull/deadsnakes-python2.7'
+
+- name: Update Apt cache
+#  apt: update_cache=yes upgrade=yes
+  shell: apt-get -y update
+
+- name: Upgrade Apt packages
+#  apt: upgrade=full
+  shell: apt-get -y upgrade
+
+- name: Create .ssh directory for user1
+  file: path=/home/user1/.ssh state=directory owner=user1 group=user1 mode=0700
+
+- name: Copy host key for git clone
+  copy: src=git_key dest=/home/user1/.ssh/id_rsa mode=0600 owner=user1 group=user1
+
+- name: Clone HomeAutomation repo
+  git: repo=git@git.spine2.ncrs.nhs.uk:cis/productteaminforadiator.git dest=/home/user1/productteaminforadiator force=yes accept_hostkey=yes key_file=/home/user1/.ssh/id_rsa
+
+- name: Set kanban.py as executable
+  file: path=/home/user1/productteaminforadiator/web/kanban.py mode=0755
+
+- name: Set repo permissions for user1
+  file: path=/home/user1/productteaminforadiator owner=user1 group=user1 recurse=yes
+
+- name: Install dateutil
+  pip: name=python-dateutil state=present
+
+- name: Install Flask
+  pip: name=Flask state=present
+
+- name: Create InfoRadiator service (1)
+  template: src=inforadiator mode=0755 dest=/etc/init.d/inforadiator
+
+- name: Create InfoRadiator service (2)
+  shell: sudo update-rc.d inforadiator defaults
+
+- name: Start InfoRadiator
+  service: name=inforadiator state=started enabled=yes
+

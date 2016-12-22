@@ -1,0 +1,5 @@
+---
+- name: Clone HomeAutomation repo
+  git: repo=git@git.spine2.ncrs.nhs.uk:cis/productteaminforadiator.git dest=/home/user1/productteaminforadiator force=yes accept_hostkey=yes key_file=/home/user1/.ssh/id_rsa
+
+

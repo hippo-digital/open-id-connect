@@ -4,6 +4,7 @@ from auth_flow_session import auth_flow_session
 import time
 
 class tokenrequest:
+    issuer_address = 'http://localhost:5000'
 
     def __init__(self, grant_type, code, redirect_uri, client_id, client_secret):
         self.grant_type = grant_type
@@ -11,7 +12,6 @@ class tokenrequest:
         self.redirect_uri = redirect_uri
         self.client_id = client_id
         self.client_secret = client_secret
-
 
     def get(self):
         self.auth_flow_session = auth_flow_session()
@@ -29,15 +29,17 @@ class tokenrequest:
     def _generate_jwt(self):
         timestamp = int(time.time())
 
-        claims = {'iss': 'http://192.168.1.149:5000',
+        claims = {'iss': tokenrequest.issuer_address,
                   'sub': self.auth_flow_session.claims['sub'],
-                  'aud': 'moodle-1',
+                  'aud': self.client_id,
                   'iat': timestamp,
                   'exp': timestamp + 3600,
                   'given_name': self.auth_flow_session.claims['givenName'],
                   'family_name': self.auth_flow_session.claims['sn'],
-                  'email': self.auth_flow_session.claims['mail'],
-                  'nonce': self.auth_flow_session.nonce}
+                  'email': self.auth_flow_session.claims['mail']}
+
+        if hasattr(self.auth_flow_session, 'nonce'):
+            claims['nonce'] = self.auth_flow_session.nonce
 
         token = jwt.encode(claims, 'secret', algorithm='HS256')
 

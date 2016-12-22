@@ -1,0 +1,45 @@
+---
+- name: Install Python
+  apt: name=python3 state=present
+
+- name: Install Pip
+  apt: name=python3-pip state=present
+
+- name: Install GIT
+  apt: name=git state=present
+
+- name: Install VirtualEnv
+  pip: name=virtualenv state=present executable=pip3
+
+- name: Install PyYAML
+  pip: name=pyyaml state=present virtualenv=/home/user1/open-id-connect/idp
+
+- name: Install PyRedis
+  pip: name=redis state=present virtualenv=/home/user1/open-id-connect/idp
+
+- name: Install UWSGI
+  pip: name=uwsgi state=present virtualenv=/home/user1/open-id-connect/idp
+
+- name: Install Flask
+  pip: name=flask state=present virtualenv=/home/user1/open-id-connect/idp
+
+- name: Update repositories cache and install nginx package
+  apt:
+    name: python3-pip
+    update_cache: yes
+
+- name: Update repositories cache and install nginx package
+  apt:
+    name: python3-dev
+    update_cache: yes
+
+- name: Update repositories cache and install nginx package
+  apt:
+    name: nginx
+    update_cache: yes
+
+- name: IDP Config
+  copy:
+    src: hippo-idp.service
+    dest: /etc/nginx/sites-available/
+    mode: 0644

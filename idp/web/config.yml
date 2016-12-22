@@ -1,4 +1,7 @@
 ---
+issuer:
+    address: http://10.211.55.2:5000
+
 idstore:
     address: 10.211.55.8
     port: 389

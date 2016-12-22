@@ -70,7 +70,7 @@ def login():
                    fields['scope'],
                    fields['response_type'],
                    fields['redirect_uri'],
-                   fields['state'],
+                   state=None if 'state' not in fields else fields['state'],
                    nonce=None if 'nonce' not in fields else fields['nonce'])
 
         log.info(log_header + ' Message=Created Session Session=%s' % ses.__dict__)
@@ -109,9 +109,14 @@ def login():
         log.info(log_header + ' Message=Setting other claims Claims=%s' % auth['claims'])
         ses.set_claims(auth['claims'])
 
-        response = redirect(
-            "%s%scode=%s&state=%s" % (ses.redirect_uri, '&' if '?' in ses.redirect_uri else '?', ses.code, ses.state),
-            code=302)
+        response_uri = ses.redirect_uri
+
+        if hasattr(ses, 'state'):
+            response_uri = '%s%scode=%s&state=%s' % (response_uri, '&' if '?' in ses.redirect_uri else '?', ses.code, ses.state)
+        else:
+            response_uri = '%s%scode=%s' % (response_uri, '&' if '?' in ses.redirect_uri else '?', ses.code)
+
+        response = redirect(response_uri, code=302)
         log.info(log_header + ' Message=Response prepared URI=%s' % (response.location))
 
         ses.save()
@@ -153,6 +158,7 @@ def token():
         if not check_grant_type(request.form['grant_type']):
             log.info(log_header + ' Message=Invalid Grant Type, returning error GrantType=%s' % request.form['grant_type'])
             return json.dumps({'error': 'unsupported_grant_type'}), 400
+
 
         log.info(log_header + ' Message=Creating new token request')
         tr = tokenrequest(request.form['grant_type'],

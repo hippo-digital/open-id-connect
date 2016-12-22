@@ -6,21 +6,18 @@ from storage import storage
 import re
 
 
-
 class tests_view(unittest.TestCase):
     def setUp(self):
         self.app = view.app.test_client()
         self.session_content_1 = {'code': '0123456789012345',
                                   'redirect_uri': 'http://test.app/redirectpath',
                                   'response_type': 'code',
-                                  'nonce': 'N584e75133c0fe',
                                   'scope': 'openid profile email',
                                   'claims': {'sub': 'Test User',
                                              'sn': 'User',
                                              'givenName': 'Test',
                                              'mail': 'testuser@test.org'},
-                                  'client_id': 'test1',
-                                  'state': 'NOr2IQCBdZJ321T'}
+                                  'client_id': 'test1'}
 
         self.authorisation_request_1 = {'client_id': 'test-1',
                                         'redirect_uri': 'http://abc',

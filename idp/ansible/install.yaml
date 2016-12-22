@@ -1,0 +1,12 @@
+---
+
+# Required infrastructure
+# -----------------------
+
+- hosts: all
+  user: user1
+  roles:
+   - base
+   - idp
+  vars:
+    - enable_sshd_timeout: false
