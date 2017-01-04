@@ -3,6 +3,10 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+idp/web/bin/*
+idp/web/include/*
+idp/web/pip-selfcheck.json
+
 .idea/
 
 # C extensions
