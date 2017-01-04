@@ -8,29 +8,32 @@
 - name: Install GIT
   apt: name=git state=present
 
+- name: Create service user
+  user: name=idpservice
+
 - name: Clone application repo
-  git: repo=https://github.com/hippodigital/open-id-connect.git dest=/home/user1/open-id-connect
+  git: repo=https://github.com/hippodigital/open-id-connect.git dest=/home/idpservice/open-id-connect
 
 - name: Install VirtualEnv
   pip: name=virtualenv state=present executable=pip3
 
 - name: Install PyYAML
-  pip: name=pyyaml state=present virtualenv=/home/user1/open-id-connect/idp/web virtualenv_python=python3
+  pip: name=pyyaml state=present virtualenv=/home/idpservice/open-id-connect/idp/web virtualenv_python=python3
 
 - name: Install PyRedis
-  pip: name=redis state=present virtualenv=/home/user1/open-id-connect/idp/web virtualenv_python=python3
+  pip: name=redis state=present virtualenv=/home/idpservice/open-id-connect/idp/web virtualenv_python=python3
 
 - name: Install UWSGI
-  pip: name=uwsgi state=present virtualenv=/home/user1/open-id-connect/idp/web virtualenv_python=python3
+  pip: name=uwsgi state=present virtualenv=/home/idpservice/open-id-connect/idp/web virtualenv_python=python3
 
 - name: Install Flask
-  pip: name=flask state=present virtualenv=/home/user1/open-id-connect/idp/web virtualenv_python=python3
+  pip: name=flask state=present virtualenv=/home/idpservice/open-id-connect/idp/web virtualenv_python=python3
 
 - name: Install LDAP3
-  pip: name=ldap3 state=present virtualenv=/home/user1/open-id-connect/idp/web virtualenv_python=python3
+  pip: name=ldap3 state=present virtualenv=/home/idpservice/open-id-connect/idp/web virtualenv_python=python3
 
 - name: Install Jose JWT
-  pip: name=python-jose state=present virtualenv=/home/user1/open-id-connect/idp/web virtualenv_python=python3
+  pip: name=python-jose state=present virtualenv=/home/idpservice/open-id-connect/idp/web virtualenv_python=python3
 
 - name: Update repositories cache and install nginx package
   apt: name=python3-pip update_cache=yes
@@ -48,7 +51,7 @@
   file: path=/var/log/idp state=directory mode=0777
 
 - name: Set app directory permissions
-  file: path=/home/user1/open-id-connect state=directory owner=user1 group=user1 recurse=yes
+  file: path=/home/idpservice/open-id-connect state=directory owner=idpservice group=idpservice recurse=yes
 
 - name: IDP Config
   copy: src=hippo-idp dest=/etc/nginx/sites-available/ mode=0644
@@ -57,10 +60,10 @@
   copy: src=hippo-idp.service dest=/etc/systemd/system/ mode=0755
 
 - name: SSL Private Key
-  copy: src=login.hippo.digital.key dest=/home/user1 mode=0600
+  copy: src=login.hippo.digital.key dest=/home/idpservice mode=0600
 
 - name: SSL Certificate
-  copy: src=login.hippo.digital.pem dest=/home/user1 mode=0600
+  copy: src=login.hippo.digital.pem dest=/home/idpservice mode=0600
 
 - name: Create symlink to login.hippo.digital
   file: src=/etc/nginx/sites-available/hippo-idp dest=/etc/nginx/sites-enabled/hippo-idp state=link

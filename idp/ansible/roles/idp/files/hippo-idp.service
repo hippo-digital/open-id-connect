@@ -3,11 +3,11 @@ Description=uWSGI instance to serve Hippo IDP
 After=network.target
 
 [Service]
-User=user1
+User=idpservice
 Group=www-data
-WorkingDirectory=/home/user1/open-id-connect/idp/web
-Environment="PATH=/home/user1/open-id-connect/idp/web/bin"
-ExecStart=/home/user1/open-id-connect/idp/web/bin/uwsgi --ini web.ini
+WorkingDirectory=/home/idpservice/open-id-connect/idp/web
+Environment="PATH=/home/idpservice/open-id-connect/idp/web/bin"
+ExecStart=/home/idpservice/open-id-connect/idp/web/bin/uwsgi --ini web.ini
 
 [Install]
 WantedBy=multi-user.target

@@ -3,8 +3,8 @@ server {
     server_name login.hippo.digital;
 
     ssl on;
-    ssl_certificate /home/user1/login.hippo.digital.pem;
-    ssl_certificate_key /home/user1/login.hippo.digital.key;
+    ssl_certificate /home/idpservice/login.hippo.digital.pem;
+    ssl_certificate_key /home/idpservice/login.hippo.digital.key;
 
     location / {
         include uwsgi_params;
