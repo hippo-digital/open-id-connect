@@ -3,7 +3,7 @@ Description=uWSGI instance to serve Hippo IDP
 After=network.target
 
 [Service]
-User=ubuntu
+User=user1
 Group=www-data
 WorkingDirectory=/home/user1/open-id-connect/idp/web
 Environment="PATH=/home/user1/open-id-connect/idp/web/bin"
