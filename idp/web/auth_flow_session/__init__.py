@@ -25,6 +25,7 @@ class auth_flow_session:
 
         self.claims = {}
         self.code = ''.join([random.choice(string.ascii_letters + string.digits) for n in range(16)]) #uuid.uuid4().hex
+
         logging.info(log_header + ' Code=%s' % self.code)
 
         self._persist()
@@ -41,12 +42,11 @@ class auth_flow_session:
         self.access_token = ''.join([random.choice(string.ascii_letters + string.digits) for n in range(16)]) #uuid.uuid4().hex
 
     def save(self):
-        # log.info('PERSISTING')
         self._persist()
 
     def _persist(self):
         storage.set('sessions_%s' % self.code, json.dumps(self.__dict__))
-        storage.expire('sessions_%s' % self.code, 3600) # 1 hour
+        storage.expire('sessions_%s' % self.code, 600) # 10 minutes - RFC 6749 4.1.2 max lifetime for a code
 
     def _retrieve(self):
         state = json.loads(storage.get('sessions_%s' % self.code))

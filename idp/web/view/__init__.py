@@ -52,19 +52,19 @@ def login():
 
         if not check_client_auth(fields['client_id']):
             log.info(log_header + ' Message=ClientID not recognised ClientID=%s' % fields['client_id'])
-            return json.dumps({'error': 'unauthorized_client'}), 400
+            return json.dumps({'error': 'unauthorized_client', 'state': fields['state']}), 400
 
         if not check_scope(fields['scope']):
             log.info(log_header + ' Message=Invalid scope provided Scope=%s' % fields['scope'])
-            return json.dumps({'error': 'invalid_scope'}), 400
+            return json.dumps({'error': 'invalid_scope', 'state': fields['state']}), 400
 
         if not check_response_type(fields['response_type']):
             log.info(log_header + ' Message=Invalid response type ResponseType=%s' % fields['response_type'])
-            return json.dumps({'error': 'unsupported_response_type'}), 400
+            return json.dumps({'error': 'unsupported_response_type', 'state': fields['state']}), 400
 
         if not check_state(fields['state']):
             log.info(log_header + ' Message=Invalid state State=%s' % fields['state'])
-            return json.dumps({'error': 'invalid_request'}), 400
+            return json.dumps({'error': 'invalid_request', 'state': fields['state']}), 400
 
         ses.create(fields['client_id'],
                    fields['scope'],
@@ -125,7 +125,12 @@ def login():
 
     else:
         log.info(log_header + ' Message=Required fields missing Fields=%s' % fields)
-        return json.dumps({'error': 'invalid_request'}), 400
+        error = {'error': 'invalid_request'}
+
+        if 'state' in fields:
+            error['state'] = fields['state']
+
+        return json.dumps(error), 400
 
 
 @app.route('/endpoint', methods=['GET', 'POST'])
@@ -167,8 +172,12 @@ def token():
                           request.form['client_id'],
                           request.form['client_secret'])
 
-        log.info(log_header + ' Message=Getting token')
-        token = tr.get()
+        try:
+            log.info(log_header + ' Message=Getting token')
+            token = tr.get()
+        except Exception as e:
+            log.info(log_header + ' Message=Non-matching Redirect_URI, returning error Code=%s' % request.form['code'])
+            return json.dumps({'error': 'invalid_grant'}), 400
 
         log.info(log_header + ' Message=Returning token Token=%s' % token)
         return token

@@ -24,6 +24,9 @@ class tokenrequest:
         response['token_type'] = 'Bearer'
         response['expires_in'] = 3600
 
+        if not self._validate_redirect_url():
+            raise Exception
+
         return json.dumps(response)
 
     def _generate_jwt(self):
@@ -45,3 +48,5 @@ class tokenrequest:
 
         return token
 
+    def _validate_redirect_url(self):
+        return self.redirect_uri == self.auth_flow_session.redirect_uri

@@ -4,6 +4,7 @@ import view
 import json
 from storage import storage
 import re
+import time
 
 
 class tests_view(unittest.TestCase):
@@ -35,12 +36,15 @@ class tests_view(unittest.TestCase):
         self.assertEqual(error_dict['error'], 'invalid_request')
 
     def test_token_whenCalledWithInvalidClientId_returns400InvalidClient(self):
+        storage.hset('clients', 'test-1', '0123456789')
+        storage.set('sessions_0123456789012345', json.dumps(self.session_content_1))
+
         returned_result = self.app.post('/token',
                                         data={'client_id': 'wibble',
                                               'client_secret': '123',
                                               'code': 'invalid',
                                               'grant_type': 'abc',
-                                              'redirect_uri': 'http://abc'})
+                                              'redirect_uri': 'http://test.app/redirectpath'})
 
         self.assertEqual(400, returned_result.status_code)
         body = returned_result.data.decode('utf-8')
@@ -49,12 +53,15 @@ class tests_view(unittest.TestCase):
         self.assertEqual(error_dict['error'], 'invalid_client')
 
     def test_token_whenCalledWithInvalidCode_returns400InvalidGrant(self):
+        storage.hset('clients', 'test-1', '0123456789')
+        storage.set('sessions_0123456789012345', json.dumps(self.session_content_1))
+
         returned_result = self.app.post('/token',
                                         data={'client_id': 'moodle-1',
                                               'client_secret': 'ml6)>MzlrQz~-3W',
                                               'code': 'invalid',
                                               'grant_type': 'abc',
-                                              'redirect_uri': 'http://abc'})
+                                              'redirect_uri': 'http://test.app/redirectpath'})
 
         self.assertEqual(400, returned_result.status_code)
         body = returned_result.data.decode('utf-8')
@@ -63,12 +70,15 @@ class tests_view(unittest.TestCase):
         self.assertEqual(error_dict['error'], 'invalid_grant')
 
     def test_token_whenCalledWithInvalidGrantType_returns400UnsupportedGrantType(self):
+        storage.hset('clients', 'test-1', '0123456789')
+        storage.set('sessions_0123456789012345', json.dumps(self.session_content_1))
+
         returned_result = self.app.post('/token',
                                         data={'client_id': 'test-1',
                                               'client_secret': '0123456789',
                                               'code': '0123456789012345',
                                               'grant_type': 'code',
-                                              'redirect_uri': 'http://abc'})
+                                              'redirect_uri': 'http://test.app/redirectpath'})
 
         self.assertEqual(400, returned_result.status_code)
         body = returned_result.data.decode('utf-8')
@@ -85,9 +95,46 @@ class tests_view(unittest.TestCase):
                                               'client_secret': '0123456789',
                                               'code': '0123456789012345',
                                               'grant_type': 'authorization_code',
-                                              'redirect_uri': 'http://abc'})
+                                              'redirect_uri': 'http://test.app/redirectpath'})
 
         self.assertEqual(200, returned_result.status_code)
+
+    def test_token_whenCalledWithNonMatchingRedirectURI_returns400InvalidGrant(self):
+        storage.hset('clients', 'test-1', '0123456789')
+        storage.set('sessions_0123456789012345', json.dumps(self.session_content_1))
+
+        returned_result = self.app.post('/token',
+                                        data={'client_id': 'test-1',
+                                              'client_secret': '0123456789',
+                                              'code': '0123456789012345',
+                                              'grant_type': 'authorization_code',
+                                              'redirect_uri': 'http://test.app/differentredirectpath'})
+
+        self.assertEqual(400, returned_result.status_code)
+        body = returned_result.data.decode('utf-8')
+        error_dict = json.loads(body)
+        self.assertIn('error', error_dict)
+        self.assertEqual(error_dict['error'], 'invalid_grant')
+
+    def test_token_whenCalledWithExpiredCode_returns400InvalidGrant(self):
+        storage.hset('clients', 'test-1', '0123456789')
+        storage.set('sessions_0123456789012345', json.dumps(self.session_content_1))
+        storage.expire('sessions_0123456789012345', 1)
+
+        time.sleep(2)
+
+        returned_result = self.app.post('/token',
+                                        data={'client_id': 'test-1',
+                                              'client_secret': '0123456789',
+                                              'code': '0123456789012345',
+                                              'grant_type': 'authorization_code',
+                                              'redirect_uri': 'http://test.app/redirectpath'})
+
+        self.assertEqual(400, returned_result.status_code)
+        body = returned_result.data.decode('utf-8')
+        error_dict = json.loads(body)
+        self.assertIn('error', error_dict)
+        self.assertEqual(error_dict['error'], 'invalid_grant')
 
     def test_login_whenCalledWithNoArgs_returns400InvalidRequest(self):
         returned_result = self.app.post('/login')
@@ -109,6 +156,8 @@ class tests_view(unittest.TestCase):
         error_dict = json.loads(body)
         self.assertIn('error', error_dict)
         self.assertEqual(error_dict['error'], 'unauthorized_client')
+        self.assertIn('state', error_dict)
+        self.assertEqual(error_dict['state'], self.authorisation_request_1['state'])
 
     def test_login_whenCalledWithInvalidScope_returns400InvalidScope(self):
         storage.hset('clients', 'test-1', '0123456789')
@@ -122,6 +171,8 @@ class tests_view(unittest.TestCase):
         error_dict = json.loads(body)
         self.assertIn('error', error_dict)
         self.assertEqual(error_dict['error'], 'invalid_scope')
+        self.assertIn('state', error_dict)
+        self.assertEqual(error_dict['state'], self.authorisation_request_1['state'])
 
     def test_login_whenCalledWithInvalidResponseType_returns400InvalidResponseType(self):
         storage.hset('clients', 'test-1', '0123456789')
@@ -135,6 +186,8 @@ class tests_view(unittest.TestCase):
         error_dict = json.loads(body)
         self.assertIn('error', error_dict)
         self.assertEqual(error_dict['error'], 'unsupported_response_type')
+        self.assertIn('state', error_dict)
+        self.assertEqual(error_dict['state'], self.authorisation_request_1['state'])
 
     def test_login_whenCalledWithAuthzFlowParams_returns200LoginPage(self):
         storage.hset('clients', 'test-1', '0123456789')

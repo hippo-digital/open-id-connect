@@ -36,6 +36,10 @@ class storage:
         storage.__redisconnection.hset(key, field, value)
         storage.save()
 
+    def hdel(key, field):
+        storage.__redisconnection.hdel(key, field)
+        storage.save()
+
     def lrange(key, start=0, end=65536):
         return storage.__redisconnection.lrange(key, start, end)
         storage.save()
