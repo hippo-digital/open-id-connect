@@ -6,7 +6,11 @@
 - hosts: all
   user: user1
   roles:
-   - base
-   - idp
+#   - base
+#   - idp
+   - iptables
   vars:
     - enable_sshd_timeout: false
+    - iptables_inbound_ports:
+      - { protocol: 'tcp', port: 443 }
+

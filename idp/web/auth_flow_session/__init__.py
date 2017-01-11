@@ -22,6 +22,7 @@ class auth_flow_session:
         self.redirect_uri = redirect_uri
         self.state = state
         self.nonce = nonce
+        self.code_valid = True
 
         self.claims = {}
         self.code = ''.join([random.choice(string.ascii_letters + string.digits) for n in range(16)]) #uuid.uuid4().hex
@@ -42,6 +43,10 @@ class auth_flow_session:
         self.access_token = ''.join([random.choice(string.ascii_letters + string.digits) for n in range(16)]) #uuid.uuid4().hex
 
     def save(self):
+        self._persist()
+
+    def invalidate_code(self):
+        self.code_valid = False
         self._persist()
 
     def _persist(self):

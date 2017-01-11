@@ -25,7 +25,12 @@ class tokenrequest:
         response['expires_in'] = 3600
 
         if not self._validate_redirect_url():
-            raise Exception
+            raise NonMatchingRedirectException
+
+        if not self.auth_flow_session.code_valid:
+            raise InvalidCodeException
+
+        self.auth_flow_session.invalidate_code()
 
         return json.dumps(response)
 
@@ -50,3 +55,12 @@ class tokenrequest:
 
     def _validate_redirect_url(self):
         return self.redirect_uri == self.auth_flow_session.redirect_uri
+
+class NonMatchingRedirectException(Exception):
+    def __init__(self):
+        None
+
+class InvalidCodeException(Exception):
+    def __init__(self):
+        None
+

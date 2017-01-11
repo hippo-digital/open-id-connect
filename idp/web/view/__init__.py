@@ -1,9 +1,9 @@
 from flask import Flask, request, render_template, redirect, abort
 from auth_flow_session import auth_flow_session
-from tokenrequest import tokenrequest
+from tokenrequest import tokenrequest, NonMatchingRedirectException, InvalidCodeException
 from ldap_authenticator import ldap_authenticator
-import logging, os
 from storage import storage
+import logging, os
 import yaml
 import string
 import random
@@ -30,7 +30,6 @@ def log_request():
                 request.args,
                 request.form,
                 request.data.decode('utf-8')))
-
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -94,34 +93,41 @@ def login():
         request.form['username'], hashed_password))
 
         log.info(log_header + ' Message=Validating username/password against LDAP')
-        auth = ldapauth.verify_user(username, password)
-        log.info(log_header + ' Message=LDAP validation returned AuthStatus=%s' % auth['success'])
 
-        if not auth['success']:
-            log.info(log_header + ' Message=Returning login form with auth failure status')
-            return render_template('auth.html', header_string='code=%s' % (ses.code), username_value=username,
-                                   username_error='Incorrect username and/or password entered, please try again.',
-                                   password_error='')
+        try:
+            auth = ldapauth.verify_user(request.environ['transaction_id'], username, password)
 
-        log.info(log_header + ' Message=Setting username claim Username=%s' % username)
-        ses.set_claims({'sub': username})
+            log.info(log_header + ' Message=LDAP validation returned AuthStatus=%s' % auth['success'])
 
-        log.info(log_header + ' Message=Setting other claims Claims=%s' % auth['claims'])
-        ses.set_claims(auth['claims'])
+            if not auth['success']:
+                log.info(log_header + ' Message=Returning login form with auth failure status')
+                return render_template('auth.html', header_string='code=%s' % (ses.code), username_value=username,
+                                       username_error='Incorrect username and/or password entered, please try again.',
+                                       password_error='')
 
-        response_uri = ses.redirect_uri
+            log.info(log_header + ' Message=Setting username claim Username=%s' % username)
+            ses.set_claims({'sub': username})
 
-        if hasattr(ses, 'state'):
-            response_uri = '%s%scode=%s&state=%s' % (response_uri, '&' if '?' in ses.redirect_uri else '?', ses.code, ses.state)
-        else:
-            response_uri = '%s%scode=%s' % (response_uri, '&' if '?' in ses.redirect_uri else '?', ses.code)
+            log.info(log_header + ' Message=Setting other claims Claims=%s' % auth['claims'])
+            ses.set_claims(auth['claims'])
 
-        response = redirect(response_uri, code=302)
-        log.info(log_header + ' Message=Response prepared URI=%s' % (response.location))
+            response_uri = ses.redirect_uri
 
-        ses.save()
+            if hasattr(ses, 'state'):
+                response_uri = '%s%scode=%s&state=%s' % (response_uri, '&' if '?' in ses.redirect_uri else '?', ses.code, ses.state)
+            else:
+                response_uri = '%s%scode=%s' % (response_uri, '&' if '?' in ses.redirect_uri else '?', ses.code)
 
-        return response
+            response = redirect(response_uri, code=302)
+            log.info(log_header + ' Message=Response prepared URI=%s' % (response.location))
+
+            ses.save()
+
+            return response
+
+        except Exception as e:
+            log.error("Failed to validate user in ldap", e)
+            return abort(500)
 
     else:
         log.info(log_header + ' Message=Required fields missing Fields=%s' % fields)
@@ -132,11 +138,9 @@ def login():
 
         return json.dumps(error), 400
 
-
 @app.route('/endpoint', methods=['GET', 'POST'])
 def endpoint():
     return '{"sub": "Keith"}'
-
 
 @app.route('/token', methods=['POST'])
 def token():
@@ -175,9 +179,12 @@ def token():
         try:
             log.info(log_header + ' Message=Getting token')
             token = tr.get()
-        except Exception as e:
+        except NonMatchingRedirectException as e:
             log.info(log_header + ' Message=Non-matching Redirect_URI, returning error Code=%s' % request.form['code'])
             return json.dumps({'error': 'invalid_grant'}), 400
+        except InvalidCodeException as e:
+            log.info(log_header + ' Message=Invalidated Code used Code=%s' % request.form['code'])
+            return json.dumps({'error': 'invalid_request'}), 400
 
         log.info(log_header + ' Message=Returning token Token=%s' % token)
         return token
@@ -188,10 +195,10 @@ def token():
 
 
 def check_client_auth(client_id, client_secret=None):
-    if client_id not in config['clients']:
+    if client_id not in clients['clients']:
         return False
 
-    stored_client_password_hash = config['clients'][client_id]
+    stored_client_password_hash = clients['clients'][client_id]
 
     if stored_client_password_hash == None:
         return False
@@ -227,7 +234,6 @@ def check_response_type(response_type):
 def check_state(state):
     return len(state) > 0 and len(state) < 1024
 
-
 def get_all_fields(request):
     fields = {}
     accepted_keys = ['client_id',
@@ -250,15 +256,11 @@ def get_all_fields(request):
 
     return fields
 
-
-
-
-def loadconfig():
+def loadconfig(type):
     SCRIPTPATH = os.path.dirname(os.path.realpath(__file__))
-    with open(SCRIPTPATH + '/../config.yml') as cfgstream:
+    with open(SCRIPTPATH + '/../' + type + '.yml') as cfgstream:
         config = yaml.load(cfgstream)
         return config
-
 
 class InvalidTokenRequest(Exception):
     pass
@@ -269,15 +271,18 @@ class ClientAuthenticationFailure(Exception):
 
 log = logging.getLogger('idp')
 
-config = loadconfig()
+config = loadconfig('config')
+clients = loadconfig('clients')
 
 redis_port = config['sessionstore']['port']
 redis_address = config['sessionstore']['address']
 idstore_port = config['idstore']['port']
 idstore_address = config['idstore']['address']
-idstore_bindpath = config['idstore']['bindpath']
+idstore_serviceaccountdn = config['idstore']['serviceaccountdn']
+idstore_serviceaccountpassword = config['idstore']['serviceaccountpassword']
+idstore_basesearchdn = config['idstore']['basesearchdn']
 
 storage(redis_address, redis_port)
 
-ldapauth = ldap_authenticator(idstore_address, idstore_port, idstore_bindpath)
+ldapauth = ldap_authenticator(idstore_address, idstore_port, idstore_serviceaccountdn, idstore_serviceaccountpassword, idstore_basesearchdn)
 

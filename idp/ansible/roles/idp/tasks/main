@@ -1,9 +1,21 @@
 ---
-- name: Install Python
+- name: Install Redis
+  apt: name=redis-server state=present
+
+- name: Update APT cache
+  apt: update_cache=yes
+
+- name: Install NGINX
+  apt: name=nginx state=present
+
+- name: Install Python3
   apt: name=python3 state=present
 
-- name: Install Pip
+- name: Install Pip3
   apt: name=python3-pip state=present
+
+- name: Install Python3 Dev
+  apt: name=python3-dev state=present
 
 - name: Install GIT
   apt: name=git state=present
@@ -34,15 +46,6 @@
 
 - name: Install Jose JWT
   pip: name=python-jose state=present virtualenv=/home/idpservice/open-id-connect/idp/web virtualenv_python=python3
-
-- name: Update repositories cache and install nginx package
-  apt: name=python3-pip update_cache=yes
-
-- name: Update repositories cache and install nginx package
-  apt: name=python3-dev update_cache=yes
-
-- name: Update repositories cache and install nginx package
-  apt: name=nginx update_cache=yes
 
 - name: Create IDP Socket directory
   file: path=/var/idp state=directory mode=0777
