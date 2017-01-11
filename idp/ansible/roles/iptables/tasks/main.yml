@@ -8,6 +8,9 @@
 - name: Allow related inbound
   iptables: chain=INPUT ctstate=ESTABLISHED,RELATED jump=ACCEPT
 
+- name: Allow localhost REDIS
+  iptables: chain=INPUT source=localhost protocol=tcp destination_port=6379 jump=ACCEPT
+
 - name: Allow SSH
   iptables: chain=INPUT protocol=tcp destination_port=22 jump=ACCEPT
 

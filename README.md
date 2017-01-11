@@ -33,6 +33,9 @@ Install Ubuntu server on a host with the following defaults:
 Install pre-requisites via the package manager
 
 ````
+sudo apt-get install software-properties-common
+sudo apt-add-repository ppa:ansible/ansible
+sudo apt-get update
 sudo apt-get install ssh python make sshpass ansible
 ````
 
