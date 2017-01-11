@@ -1,0 +1,15 @@
+---
+issuer:
+    address: http://10.211.55.2:5000
+
+idstore:
+    address: 10.211.55.8
+    port: 389
+    serviceaccountdn: 'cn=admin,dc=hd,dc=local'
+    serviceaccountpassword: 'Password1'
+    basesearchdn: 'dc=hd,dc=local'
+
+sessionstore:
+    address: localhost
+    port: 6379
+

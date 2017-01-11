@@ -54,7 +54,7 @@
   file: path=/var/log/idp state=directory mode=0777
 
 - name: Create IDP Config directory
-  file: path=/etc/idp state=directory mode=0777
+  file: path=/etc/idp state=directory mode=0755
 
 - name: Set app directory permissions
   file: path=/home/idpservice/open-id-connect state=directory owner=idpservice group=idpservice recurse=yes
@@ -70,6 +70,12 @@
 
 - name: SSL Certificate
   copy: src=login.hippo.digital.pem dest=/etc/idp mode=0600
+
+- name: Basic config.yml
+  copy: src=config.yml dest=/etc/idp mode=0644
+
+- name: Basic clients.yml
+  copy: src=clients.yml dest=/etc/idp mode=0644
 
 - name: Create symlink to login.hippo.digital
   file: src=/etc/nginx/sites-available/hippo-idp dest=/etc/nginx/sites-enabled/hippo-idp state=link
