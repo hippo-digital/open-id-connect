@@ -11,9 +11,6 @@ datetime = $(shell date +%Y%m%d-%k%M%S)
 default:
 	@echo "A task must be specified"
 	@echo ""
-	@echo "  To deploy:"
-	@echo "      make deploy limit=all|<IP Address>"
-	@echo ""
 	@echo "  To install on a new OS instance: "
 	@echo "      make install limit=<IP Address>"
 	@echo ""
@@ -27,9 +24,4 @@ endif
 # -------------------------
 install:
 	export ANSIBLE_HOST_KEY_CHECKING=False
-	ansible-playbook -i inventories/main --limit $(limit) install.yaml -u user1 --sudo --ask-pass --ask-sudo-pass $(params)
-deploy:
-	export ANSIBLE_HOST_KEY_CHECKING=False
-	ansible-playbook -i inventories/main --limit $(limit) deploy.yaml -u user1 --sudo --ask-pass --ask-sudo-pass $(params)
-
-
+	ansible-playbook -i inventories/main --limit $(limit) install.yml -u user1 --sudo --ask-pass --ask-sudo-pass $(params)

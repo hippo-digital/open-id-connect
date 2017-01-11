@@ -6,6 +6,13 @@
 - hosts: all
   user: user1
   roles:
-   - deploy
+   - base
+   - idp
+   - iptables
+   - ssh
   vars:
     - enable_sshd_timeout: false
+    - iptables_inbound_ports:
+      - { protocol: 'tcp', port: 443 }
+
+

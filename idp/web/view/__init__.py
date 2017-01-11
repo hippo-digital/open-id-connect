@@ -258,7 +258,7 @@ def get_all_fields(request):
 
 def loadconfig(type):
     SCRIPTPATH = os.path.dirname(os.path.realpath(__file__))
-    with open('/etc/hippo-idp/' + type + '.yml') as cfgstream:
+    with open('/etc/idp/' + type + '.yml') as cfgstream:
         config = yaml.load(cfgstream)
         return config
 

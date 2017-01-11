@@ -53,6 +53,9 @@
 - name: Create IDP Logs directory
   file: path=/var/log/idp state=directory mode=0777
 
+- name: Create IDP Config directory
+  file: path=/etc/idp state=directory mode=0777
+
 - name: Set app directory permissions
   file: path=/home/idpservice/open-id-connect state=directory owner=idpservice group=idpservice recurse=yes
 
@@ -63,10 +66,10 @@
   copy: src=hippo-idp.service dest=/etc/systemd/system/ mode=0755
 
 - name: SSL Private Key
-  copy: src=login.hippo.digital.key dest=/home/idpservice mode=0600
+  copy: src=login.hippo.digital.key dest=/etc/idp mode=0600
 
 - name: SSL Certificate
-  copy: src=login.hippo.digital.pem dest=/home/idpservice mode=0600
+  copy: src=login.hippo.digital.pem dest=/etc/idp mode=0600
 
 - name: Create symlink to login.hippo.digital
   file: src=/etc/nginx/sites-available/hippo-idp dest=/etc/nginx/sites-enabled/hippo-idp state=link

@@ -20,12 +20,3 @@
 - name: Save iptables rules
   command: netfilter-persistent save
 
-#- name: install iptables configuration
-#  template: dest=/etc/iptables.rules src=iptables.j2 owner=root group=root mode=0600
-#  notify:
-#    - restart iptables
-#
-#- name: enable iptables service
-#  service: name=ufw enabled=yes state=started
-#
-#- meta: flush_handlers

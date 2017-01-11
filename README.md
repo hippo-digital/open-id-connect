@@ -83,4 +83,80 @@ make install limit=<ip address of idp host>
 
 Enter the password for user1
 
+**Step 7**
+
+Add SDH specific configuration to the IDP
+
+````
+sudo vim /etc/idp/config.yml
+
+# Make changes to reflect the local envionment configuration
+
+---
+issuer:
+    address: https://oidc.shdc.nhs.uk
+
+idstore:
+    address: 10.181.28.96
+    port: 389
+    serviceaccountdn: 'uid=sdhidpuser,cn=users,dc=sdhc,dc=xsdhis,dc=nhs,dc=uk'
+    serviceaccountpassword: <password as set on account>
+    basesearchdn: 'ou=Users,ou=SDHIS,dc=sdhc,dc=xsdhis,dc=nhs,dc=uk'
+
+sessionstore:
+    address: localhost
+    port: 6379
+````
+
+Add client details for Totara LMS
+
+````
+sudo vim /etc/idp/clients.yml
+
+# Make changes to reflect the local envionment configuration
+
+---
+clients:
+    # Hashes must be lower case
+    totara-lms-1: ...
+
+````
+
+**Step 8**
+
+Add the SDH specific configuration to NGINX
+
+````
+sudo vim /etc/nginx/sites-available/hippo-idp
+
+# Make changes to reflect the service FQDN and certificate locations
+
+server {
+    listen 443;
+    server_name oidc.shdc.nhs.uk;
+
+    ssl on;
+    ssl_certificate /etc/idp/oidc.shdc.nhs.uk.pem;
+    ssl_certificate_key /etc/idp/oidc.shdc.nhs.uk.key;
+
+    location / {
+        include uwsgi_params;
+        uwsgi_pass unix:/var/idp/hippo-idp.sock;
+    }
+}
+````
+
+
+**Step 9**
+
+Add SSL Key and Certificate to the IDP
+
+Copy the .key and .pem files to /etc/idp as
+
+* oidc.sdhc.nhs.uk.key
+* oidc.sdhc.nhs.uk.pem
+
+
+
+
 
