@@ -7,7 +7,7 @@ class ldap_authenticator:
 
         self.service_bind_dn = service_bind_dn
         self.service_password = service_password
-        self.search_base_dn = service_bind_dn
+        self.search_base_dn = search_base_dn
 
         self.directory_server = ldap3.Server(server)
 
@@ -26,7 +26,7 @@ class ldap_authenticator:
             self.log.error(log_header + ' Failed to bind to directory server: %s' % (conn.result['description']))
             return {'success': False, 'status': 'Failed to bind to directory server', 'message': conn.result['description']}
 
-        conn.search('dc=hd,dc=local', '(&(objectclass=person)(uid=%s))' % username, attributes=ldap3.ALL_ATTRIBUTES)
+        conn.search(self.search_base_dn, '(&(objectclass=person)(uid=%s))' % username, attributes=ldap3.ALL_ATTRIBUTES)
         self.log.info(log_header + ' Message=LDAP Search Returned Objects Count=%s' % len(conn.entries))
 
         if len(conn.entries) == 1:
