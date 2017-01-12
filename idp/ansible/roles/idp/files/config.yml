@@ -1,24 +1,51 @@
 ---
+# Basic configuration for the IDP
 issuer:
-    address: http://10.211.55.2:5000
+    # The base URL for the published IDP service, i.e. where clients will be pointed to
+    address: https://login.hippo.digital
 
+
+# Configuration for the LDAP directory where user objects are held
 idstore:
+    # IP address of the LDAP server
     address: 10.211.55.8
+
+    # TCP port for the LDAP service
     port: 389
+
+    # The service requires a low privileged (read only, search) service account to
+    #  conduct an initial query against the directory upon user authentication
+
+    # DN for the service account used to conduct user searches
     serviceaccountdn: 'cn=admin,dc=hd,dc=local'
+
+    # Password for the service account used to conduct user searches
     serviceaccountpassword: 'Password1'
+
+
+    # DN for the base OU under which all user objects are stored.  This will be used
+    #  as the root for a search each time a user logs in
     basesearchdn: 'dc=hd,dc=local'
 
+
+# List of attributes that need to be read for the user object and added to the claim as
+#  part of the JW token passed to the consuming application
 claimattributes:
   - sn
   - givenName
   - mail
   - employeeNumber
 
+
+# Configuration for connection to the Redis host.  In single server configurations this
+#  would normally be left in the default configuration of localhost:6379
 sessionstore:
     address: localhost
     port: 6379
 
+
+# Session configuration for the JW token
 session:
+    # The length of time in seconds that a login session will be valid for
     jwtexpiryseconds: 28800
 
