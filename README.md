@@ -1,16 +1,12 @@
 # open-id-connect
 
-## Deploying the IDP
+## Setup
 
-### Ansible Configuration
+The IDP is deployed via Ansible.  Ansible can be deployed on the IDP itself and used to configure the host locally.
+
+### Initial Deployment
 
 **Requirements**
-
- - Ansible Host 
-   - Ubuntu Server 16.04.1 or later
-   - 1GB RAM
-   - 1 CPU
-   - 20GB Disk Space
 
  - IDP Host
    - Ubuntu Server 16.04.1 or later
@@ -25,7 +21,6 @@ Install Ubuntu server on a host with the following defaults:
 
  - Username: user1
  - Password: \<Choose a suitable password\>
- - 
 
  
 **Step 2**
@@ -56,22 +51,12 @@ cd open-id-connect/idp/ansible
 vim inventory/main
 ````
 
-Modify the file as
-
-````
-[all]
-10.211.55.10 hostname=idp-test-deploy
-
-#new host entry
-<ip address of idp host> hostname=<desired hostname>
-````
-
 **Step 5**
 
 Register the remote hosts key
 
 ````
-ssh user1@<ip address of idp host>
+ssh user1@127.0.0.1
 ````
 
 Type **yes** to accept, then press **Ctrl+C**
@@ -81,12 +66,18 @@ Type **yes** to accept, then press **Ctrl+C**
 Run the Ansible playbook against the IDP host
 
 ````
-make install limit=<ip address of idp host>
+make install limit=127.0.0.1
 ````
 
-Enter the password for user1
+Enter the password for user1.
 
-**Step 7**
+Ansible will deploy the IDP in its default configuration.
+
+
+### Configuration
+
+
+#### IDP Settings
 
 Add SDH specific configuration to the IDP
 

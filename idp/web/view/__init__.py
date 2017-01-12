@@ -174,7 +174,8 @@ def token():
                           request.form['code'],
                           request.form['redirect_uri'],
                           request.form['client_id'],
-                          request.form['client_secret'])
+                          request.form['client_secret'],
+                          jwtexpiryseconds)
 
         try:
             log.info(log_header + ' Message=Getting token')
@@ -281,8 +282,10 @@ idstore_address = config['idstore']['address']
 idstore_serviceaccountdn = config['idstore']['serviceaccountdn']
 idstore_serviceaccountpassword = config['idstore']['serviceaccountpassword']
 idstore_basesearchdn = config['idstore']['basesearchdn']
+claim_attributes = config['claimattributes']
+jwtexpiryseconds = config['session']['jwtexpiryseconds']
 
 storage(redis_address, redis_port)
 
-ldapauth = ldap_authenticator(idstore_address, idstore_port, idstore_serviceaccountdn, idstore_serviceaccountpassword, idstore_basesearchdn)
+ldapauth = ldap_authenticator(idstore_address, idstore_port, idstore_serviceaccountdn, idstore_serviceaccountpassword, idstore_basesearchdn, claim_attributes)
 

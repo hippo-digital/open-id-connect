@@ -6,12 +6,13 @@ import time
 class tokenrequest:
     issuer_address = 'http://localhost:5000'
 
-    def __init__(self, grant_type, code, redirect_uri, client_id, client_secret):
+    def __init__(self, grant_type, code, redirect_uri, client_id, client_secret, jwt_expiry_seconds):
         self.grant_type = grant_type
         self.code = code
         self.redirect_uri = redirect_uri
         self.client_id = client_id
         self.client_secret = client_secret
+        self.jwt_expiry_seconds = jwt_expiry_seconds
 
     def get(self):
         self.auth_flow_session = auth_flow_session()
@@ -22,7 +23,7 @@ class tokenrequest:
         response['id_token'] = self._generate_jwt()
         response['access_token'] = self.auth_flow_session.access_token
         response['token_type'] = 'Bearer'
-        response['expires_in'] = 3600
+        response['expires_in'] = self.jwt_expiry_seconds
 
         if not self._validate_redirect_url():
             raise NonMatchingRedirectException
