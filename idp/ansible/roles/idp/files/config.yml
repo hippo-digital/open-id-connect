@@ -9,7 +9,16 @@ idstore:
     serviceaccountpassword: 'Password1'
     basesearchdn: 'dc=hd,dc=local'
 
+claimattributes:
+  - sn
+  - givenName
+  - mail
+  - employeeNumber
+
 sessionstore:
     address: localhost
     port: 6379
+
+session:
+    jwtexpiryseconds: 28800
 

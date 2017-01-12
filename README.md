@@ -48,7 +48,6 @@ Modify the Ansible inventory file to include the IDP host
 
 ````
 cd open-id-connect/idp/ansible
-vim inventory/main
 ````
 
 **Step 5**
