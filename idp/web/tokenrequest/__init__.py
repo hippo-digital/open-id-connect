@@ -39,18 +39,17 @@ class tokenrequest:
         timestamp = int(time.time())
 
         claims = {'iss': tokenrequest.issuer_address,
-                  'sub': self.auth_flow_session.claims['sub'],
                   'aud': self.client_id,
                   'iat': timestamp,
-                  'exp': timestamp + 3600,
-                  'given_name': self.auth_flow_session.claims['givenName'],
-                  'family_name': self.auth_flow_session.claims['sn'],
-                  'email': self.auth_flow_session.claims['mail']}
+                  'exp': timestamp + self.jwt_expiry_seconds}
+
+        for key, value in self.auth_flow_session.claims.items():
+            claims[key] = self.auth_flow_session.claims[key]
 
         if hasattr(self.auth_flow_session, 'nonce'):
             claims['nonce'] = self.auth_flow_session.nonce
 
-        token = jwt.encode(claims, 'secret', algorithm='HS256')
+        token = jwt.encode(claims, self.client_secret, algorithm='HS256')
 
         return token
 

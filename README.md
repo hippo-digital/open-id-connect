@@ -7,7 +7,7 @@ The IDP is deployed via Ansible.  Ansible can be deployed on the IDP itself and 
 
 ### Initial Deployment
 
-**Requirements**
+#### Requirements
 
  - IDP Host
    - Ubuntu Server 16.04.1 or later
@@ -16,7 +16,7 @@ The IDP is deployed via Ansible.  Ansible can be deployed on the IDP itself and 
    - 20GB Disk Space
 
    
-**Installing Ubuntu**
+#### Installing Ubuntu
 
 Install Ubuntu server on a host with the following defaults:
 
@@ -25,7 +25,7 @@ Install Ubuntu server on a host with the following defaults:
  - ... (complete on train)
 
  
-**Initial Host Configuration**
+#### Initial Host Configuration
 
 Install pre-requisites via the package manager
 
@@ -52,7 +52,13 @@ make install limit=127.0.0.1  # When prompted, enter the user1 password twice
 
 ### IDP Settings
 
-The configuration will need to be altered to reflect the local environment setup.  The default config.yml is self-documented, but included here for completeness.
+The configuration will need to be altered to reflect the local environment setup.  
+
+````
+sudo vim /etc/idp/config.yml
+````
+
+The default config.yml is self-documented, but included here for completeness.
 
 ````
 ---
@@ -115,7 +121,7 @@ Each consuming client will need to configured with a client ID and an associated
 
 This step only needs to be completed if you do not already have a client ID and secret.
 
-The hash is made up of the client ID, a . separator, and the client secret, combined and hashed using SHA512.  E.g.
+The hash is made up of client-id.client-secret using SHA512. E.g.
 
 ````
 my-client-1.47q6Flsmy"331&z
@@ -142,7 +148,6 @@ For example:
 clients:
     # Hashes must be lower case
     my-client-1: c9dbb92643e15...457e3ef91b125047
-
 ````
 
 ### Configuring the Web Server
@@ -181,8 +186,14 @@ Add SSL Key and Certificate to the IDP.  The file names and paths need to match 
 
 Copy the .key and .pem files to /etc/idp as
 
-* *idp_url*.key
-* *idp_url*.pem
+* idp.url.key
+* idp.url.pem
+
+Secure the keys by applying root access only permissions
+
+````
+sudo chmod 0600 /etc/idp/idp.url.*
+````
 
 
 ### Final Steps
@@ -202,11 +213,19 @@ You can conduct a basic test using CURL.
 curl https://idp.url/login
 ````
 
-You should see a reponse similar to:
+On success you should see a reponse similar to:
 
 ````
 {"error": "invalid_request"}
 ````
+
+Alternatively, issuing a full request should result in a HTML response.
+
+````
+curl http://localhost:5000/login?redirect_uri=https://my-app\&response_type=code\&scope=openid\&client_id=moodle-1\&state=123
+````
+
+
 
 ## Troubleshooting
 
