@@ -3,7 +3,7 @@ import logging
 
 class ldap_authenticator:
     def __init__(self, server, port, service_bind_dn, service_password, search_base_dn):
-        self.log = logging.getLogger('idp.ldap')
+        self.log = logging.getLogger('ldap.authn')
 
         self.service_bind_dn = service_bind_dn
         self.service_password = service_password
@@ -30,18 +30,29 @@ class ldap_authenticator:
         self.log.info(log_header + ' Message=LDAP Search Returned Objects Count=%s' % len(conn.entries))
 
         if len(conn.entries) == 1:
-            ret = {'success': True, 'claims': {}}
             user_object = conn.entries[0]
-
-            for key, value in user_object.entry_attributes_as_dict.items():
-                for attribute in ['givenName', 'sn', 'mail']:
-                    if attribute in user_object.entry_attributes_as_dict:
-                        ret['claims'][attribute] = user_object.entry_attributes_as_dict[attribute][0]
-
-            self.log.info(log_header + ' Message=Object retrieved Claims=%s' % ret['claims'])
+            user_conn = ldap3.Connection(self.directory_server, user_object.entry_dn, password=password)
 
             conn.unbind()
-            return ret
+
+            user_conn.bind()
+
+            if user_conn.bound:
+                user_conn.unbind()
+                ret = {'success': True, 'claims': {}}
+
+                for key, value in user_object.entry_attributes_as_dict.items():
+                    for attribute in ['givenName', 'sn', 'mail']:
+                        if attribute in user_object.entry_attributes_as_dict:
+                            ret['claims'][attribute] = user_object.entry_attributes_as_dict[attribute][0]
+
+                self.log.info(log_header + ' Message=Object retrieved Claims=%s' % ret['claims'])
+
+                return ret
+
+            else:
+                return {'success': False, 'status': 'Failed to bind to directory server using supplied username/password',
+                        'message': user_conn.result['description']}
 
         else:
             conn.unbind()

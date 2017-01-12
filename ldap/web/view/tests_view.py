@@ -292,29 +292,6 @@ class tests_view(unittest.TestCase):
             self.assertIn('error', error_dict)
             self.assertEqual(error_dict['error'], 'invalid_request')
 
-    def test_int_loginAndToken_whenCalledWithValidCodeOnce_returnsSuccess(self):
-        storage.hset('clients', 'test-1', '0123456789')
-        storage.set('sessions_0123456789012345', json.dumps(self.session_content_1))
-
-
-        returned_result = self.app.post('/login?code=0123456789012345',
-                                        data={'username': 'brett', 'password': 'Password1'})
-
-        body = returned_result.data.decode('utf-8')
-
-        self.assertEqual(302, returned_result.status_code)
-
-        returned_result = self.app.post('/token',
-                                        data={'client_id': 'test-1',
-                                              'client_secret': '0123456789',
-                                              'code': '0123456789012345',
-                                              'grant_type': 'authorization_code',
-                                              'redirect_uri': 'http://test.app/redirectpath'})
-
-        self.assertEqual(200, returned_result.status_code)
-
-
-
     # def test_temp_ldap_bind(self):
     #     from ldap_authenticator import ldap_authenticator
     #     service_bind_dn = 'cn=admin,dc=hd,dc=local'
