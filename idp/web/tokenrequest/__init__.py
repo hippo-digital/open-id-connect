@@ -38,6 +38,15 @@ class tokenrequest:
     def _generate_jwt(self):
         timestamp = int(time.time())
 
+        # claims = {'iss': tokenrequest.issuer_address,
+        #           'sub': self.auth_flow_session.claims['sub'],
+        #           'aud': self.client_id,
+        #           'iat': timestamp,
+        #           'exp': timestamp + 3600,
+        #           'given_name': self.auth_flow_session.claims['givenName'],
+        #           'family_name': self.auth_flow_session.claims['sn'],
+        #           'email': self.auth_flow_session.claims['mail']}
+
         claims = {'iss': tokenrequest.issuer_address,
                   'aud': self.client_id,
                   'iat': timestamp,
@@ -49,7 +58,8 @@ class tokenrequest:
         if hasattr(self.auth_flow_session, 'nonce'):
             claims['nonce'] = self.auth_flow_session.nonce
 
-        token = jwt.encode(claims, self.client_secret, algorithm='HS256')
+        token = jwt.encode(claims, 'secret', algorithm='HS256')
+        # token = jwt.encode(claims, self.client_secret, algorithm='HS256')
 
         return token
 

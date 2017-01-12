@@ -42,9 +42,9 @@ class ldap_authenticator:
                 user_conn.unbind()
                 ret = {'success': True, 'claims': {}}
 
-                for attribute in self.claim_attributes:
+                for attribute, map in self.claim_attributes.items():
                     if attribute in user_object.entry_attributes_as_dict:
-                        ret['claims'][attribute] = user_object.entry_attributes_as_dict[attribute][0]
+                        ret['claims'][map] = user_object.entry_attributes_as_dict[attribute][0]
 
                 self.log.info(log_header + ' Message=Object retrieved Claims=%s' % ret['claims'])
 

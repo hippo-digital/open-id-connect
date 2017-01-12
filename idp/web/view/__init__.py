@@ -282,8 +282,14 @@ idstore_address = config['idstore']['address']
 idstore_serviceaccountdn = config['idstore']['serviceaccountdn']
 idstore_serviceaccountpassword = config['idstore']['serviceaccountpassword']
 idstore_basesearchdn = config['idstore']['basesearchdn']
-claim_attributes = config['claimattributes']
 jwtexpiryseconds = config['session']['jwtexpiryseconds']
+tokenrequest.issuer_address = config['issuer']['address']
+
+claim_attributes = config['claimattributes']
+#
+# for attr in config['claimattributes']:
+#     claim_attributes[attr] = config['claimattributes'][attr]
+
 
 storage(redis_address, redis_port)
 

@@ -10,10 +10,10 @@ idstore:
     basesearchdn: 'dc=hd,dc=local'
 
 claimattributes:
-  - sn
-  - givenName
-  - mail
-  - employeeNumber
+    sn: family_name
+    givenName: given_name
+    mail: email
+    employeeNumber: employee_number
 
 sessionstore:
     address: localhost
