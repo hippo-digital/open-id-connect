@@ -35,7 +35,6 @@ class ldap_authenticator:
             user_conn = ldap3.Connection(self.directory_server, user_object.entry_dn, password=password)
 
             conn.unbind()
-
             user_conn.bind()
 
             if user_conn.bound:

@@ -1,7 +1,6 @@
 from flask import Flask, request, render_template, redirect, abort
 from auth_flow_session import auth_flow_session
 from tokenrequest import tokenrequest, NonMatchingRedirectException, InvalidCodeException
-from ldap_authenticator import ldap_authenticator
 from storage import storage
 import logging, os
 import yaml
@@ -9,6 +8,7 @@ import string
 import random
 import hashlib
 import json
+import requests
 
 
 app = Flask(__name__)
@@ -95,35 +95,73 @@ def login():
         log.info(log_header + ' Message=Validating username/password against LDAP')
 
         try:
-            auth = ldapauth.verify_user(request.environ['transaction_id'], username, password)
+            ldap_response = requests.post(idservice, data={'username': username, 'password': password})
+            log.info(log_header + ' Message=LDAP validation returned HTTPStatus=%s' % ldap_response.status_code)
 
-            log.info(log_header + ' Message=LDAP validation returned AuthStatus=%s' % auth['success'])
+            if ldap_response.status_code == 200:
+                ldap_content = json.loads(ldap_response.text)
+                log.info(log_header + ' Message=LDAP validation returned Content=%s' % ldap_content)
 
-            if not auth['success']:
-                log.info(log_header + ' Message=Returning login form with auth failure status')
+                if ldap_content['success']:
+                    ses.set_claims({'sub': ldap_content['sub']})
+                    ses.set_claims(ldap_content['claims'])
+
+
+                    response_uri = ses.redirect_uri
+
+                    if hasattr(ses, 'state'):
+                        response_uri = '%s%scode=%s&state=%s' % (response_uri, '&' if '?' in ses.redirect_uri else '?', ses.code, ses.state)
+                    else:
+                        response_uri = '%s%scode=%s' % (response_uri, '&' if '?' in ses.redirect_uri else '?', ses.code)
+
+                    response = redirect(response_uri, code=302)
+                    log.info(log_header + ' Message=Response prepared URI=%s' % (response.location))
+
+                    ses.save()
+
+                    return response
+
+                else:
+                    log.info(log_header + ' Message=Returning login form with auth failure status')
+                    return render_template('auth.html', header_string='code=%s' % (ses.code), username_value=username,
+                                               username_error='Incorrect username and/or password entered, please try again.',
+                                               password_error='')
+            else:
+                log.info(log_header + ' Message=LDAP Service Failure')
                 return render_template('auth.html', header_string='code=%s' % (ses.code), username_value=username,
-                                       username_error='Incorrect username and/or password entered, please try again.',
+                                       username_error='A service failure has occured.  Please contact your systems administrator.',
                                        password_error='')
 
-            log.info(log_header + ' Message=Setting username claim Username=%s' % username)
-            ses.set_claims({'sub': username})
 
-            log.info(log_header + ' Message=Setting other claims Claims=%s' % auth['claims'])
-            ses.set_claims(auth['claims'])
-
-            response_uri = ses.redirect_uri
-
-            if hasattr(ses, 'state'):
-                response_uri = '%s%scode=%s&state=%s' % (response_uri, '&' if '?' in ses.redirect_uri else '?', ses.code, ses.state)
-            else:
-                response_uri = '%s%scode=%s' % (response_uri, '&' if '?' in ses.redirect_uri else '?', ses.code)
-
-            response = redirect(response_uri, code=302)
-            log.info(log_header + ' Message=Response prepared URI=%s' % (response.location))
-
-            ses.save()
-
-            return response
+                # auth = ldapauth.verify_user(request.environ['transaction_id'], username, password)
+            #
+            # log.info(log_header + ' Message=LDAP validation returned AuthStatus=%s' % auth['success'])
+            #
+            # if not auth['success']:
+            #     log.info(log_header + ' Message=Returning login form with auth failure status')
+            #     return render_template('auth.html', header_string='code=%s' % (ses.code), username_value=username,
+            #                            username_error='Incorrect username and/or password entered, please try again.',
+            #                            password_error='')
+            #
+            # log.info(log_header + ' Message=Setting username claim Username=%s' % username)
+            # ses.set_claims({'sub': username})
+            #
+            # log.info(log_header + ' Message=Setting other claims Claims=%s' % auth['claims'])
+            # ses.set_claims(auth['claims'])
+            #
+            # response_uri = ses.redirect_uri
+            #
+            # if hasattr(ses, 'state'):
+            #     response_uri = '%s%scode=%s&state=%s' % (response_uri, '&' if '?' in ses.redirect_uri else '?', ses.code, ses.state)
+            # else:
+            #     response_uri = '%s%scode=%s' % (response_uri, '&' if '?' in ses.redirect_uri else '?', ses.code)
+            #
+            # response = redirect(response_uri, code=302)
+            # log.info(log_header + ' Message=Response prepared URI=%s' % (response.location))
+            #
+            # ses.save()
+            #
+            # return response
 
         except Exception as e:
             log.error("Failed to validate user in ldap", e)
@@ -277,21 +315,8 @@ clients = loadconfig('clients')
 
 redis_port = config['sessionstore']['port']
 redis_address = config['sessionstore']['address']
-idstore_port = config['idstore']['port']
-idstore_address = config['idstore']['address']
-idstore_serviceaccountdn = config['idstore']['serviceaccountdn']
-idstore_serviceaccountpassword = config['idstore']['serviceaccountpassword']
-idstore_basesearchdn = config['idstore']['basesearchdn']
-jwtexpiryseconds = config['session']['jwtexpiryseconds']
-tokenrequest.issuer_address = config['issuer']['address']
-
-claim_attributes = config['claimattributes']
-#
-# for attr in config['claimattributes']:
-#     claim_attributes[attr] = config['claimattributes'][attr]
-
+idservice = config['idservice']['address']
 
 storage(redis_address, redis_port)
 
-ldapauth = ldap_authenticator(idstore_address, idstore_port, idstore_serviceaccountdn, idstore_serviceaccountpassword, idstore_basesearchdn, claim_attributes)
 
