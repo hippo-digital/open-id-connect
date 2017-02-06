@@ -213,7 +213,7 @@ def token():
                           request.form['redirect_uri'],
                           request.form['client_id'],
                           request.form['client_secret'],
-                          jwtexpiryseconds)
+                          jwt_expiry_seconds)
 
         try:
             log.info(log_header + ' Message=Getting token')
@@ -316,6 +316,7 @@ clients = loadconfig('clients')
 redis_port = config['sessionstore']['port']
 redis_address = config['sessionstore']['address']
 idservice = config['idservice']['address']
+jwt_expiry_seconds = config['session']['jwtexpiryseconds']
 
 storage(redis_address, redis_port)
 

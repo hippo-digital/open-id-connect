@@ -34,6 +34,43 @@ class tests_view(unittest.TestCase):
                                                'state': '0123456',
                                                'sub': 'test_user'}
 
+        self.ldap_response_success = {'success': True,
+                                'sub': 'testuser1',
+                                'claims': {
+                                    'sn': 'Smith',
+                                    'givenName': 'Keith',
+                                    'mail': 'keith.smith@example.org',
+                                    'employeeNumber': '123456'
+                                }}
+
+        self.ldap_response_failure = {'success': False}
+
+    # This method will be used by the mock to replace requests.get
+    def mocked_requests_post_success(self, *args, **kwargs):
+        class MockResponse:
+            def __init__(self, text, status_code):
+                self.text = text
+                self.status_code = status_code
+
+            def json(self):
+                return self.json_data
+
+        return MockResponse(json.dumps(self.ldap_response_success), 200)
+
+
+    def mocked_requests_post_failed(self, *args, **kwargs):
+        class MockResponse:
+            def __init__(self, text, status_code):
+                self.text = text
+
+                self.status_code = status_code
+
+            def json(self):
+                return self.json_data
+
+        return MockResponse(json.dumps(self.ldap_response_failure), 200)
+
+
     def test_token_whenCalledWithNoParameters_returns400InvalidRequest(self):
         returned_result = self.app.post('/token')
 
@@ -230,9 +267,11 @@ class tests_view(unittest.TestCase):
         storage.hset('clients', 'test-1', '0123456789')
         storage.set('sessions_0123456789012345', json.dumps(self.session_content_1))
 
-        with mock.patch('ldap_authenticator.ldap_authenticator.verify_user') as mock_verifyuser:
-            mock_verifyuser.return_value = {'success': True, 'claims': {'givenName': 'Test', 'sn': 'User',
-                                                                        'mail': 'testuser@test.com'}}
+        with mock.patch('requests.post', side_effect=self.mocked_requests_post_success) as mock_getuserdetails:
+
+        # with mock.patch('ldap_authenticator.ldap_authenticator.verify_user') as mock_verifyuser:
+        #     mock_verifyuser.return_value = {'success': True, 'claims': {'givenName': 'Test', 'sn': 'User',
+        #                                                                 'mail': 'testuser@test.com'}}
 
             returned_result = self.app.post('/login?code=0123456789012345',
                                             data={'username': 'test', 'password': '123'})
@@ -243,9 +282,10 @@ class tests_view(unittest.TestCase):
         storage.hset('clients', 'test-1', '0123456789')
         storage.set('sessions_0123456789012345', json.dumps(self.session_content_1))
 
-        with mock.patch('ldap_authenticator.ldap_authenticator.verify_user') as mock_verifyuser:
-            mock_verifyuser.return_value = {'success': False, 'claims': {'givenName': 'Test', 'sn': 'User',
-                                                                        'mail': 'testuser@test.com'}}
+        with mock.patch('requests.post', side_effect=self.mocked_requests_post_failed) as mock_getuserdetails:
+        # with mock.patch('ldap_authenticator.ldap_authenticator.verify_user') as mock_verifyuser:
+        #     mock_verifyuser.return_value = {'success': False, 'claims': {'givenName': 'Test', 'sn': 'User',
+        #                                                                 'mail': 'testuser@test.com'}}
 
             returned_result = self.app.post('/login?code=0123456789012345',
                                             data={'username': 'test', 'password': '123'})
@@ -259,9 +299,7 @@ class tests_view(unittest.TestCase):
         storage.hset('clients', 'test-1', '0123456789')
         storage.set('sessions_0123456789012345', json.dumps(self.session_content_1))
 
-        with mock.patch('ldap_authenticator.ldap_authenticator.verify_user') as mock_verifyuser:
-            mock_verifyuser.return_value = {'success': True, 'claims': {'givenName': 'Test', 'sn': 'User',
-                                                                        'mail': 'testuser@test.com'}}
+        with mock.patch('requests.post', side_effect=self.mocked_requests_post_success) as mock_getuserdetails:
 
             returned_result = self.app.post('/login?code=0123456789012345',
                                             data={'username': 'test', 'password': '123'})

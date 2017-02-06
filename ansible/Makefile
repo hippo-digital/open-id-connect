@@ -22,6 +22,6 @@ endif
 
 # environment configuration
 # -------------------------
-install:
+install-idp:
 	export ANSIBLE_HOST_KEY_CHECKING=False
-	ansible-playbook -i inventories/main --limit $(limit) install.yml -u user1 --sudo --ask-pass --ask-sudo-pass $(params)
+	ansible-playbook -i inventories/main --limit $(limit) install_idp.yml -u user1 --sudo --ask-pass --ask-sudo-pass $(params)
