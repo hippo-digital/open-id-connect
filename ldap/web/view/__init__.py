@@ -16,7 +16,7 @@ def log_request():
     transaction_id = ''.join([random.choice(string.ascii_letters + string.digits) for n in range(6)])
     request.environ['transaction_id'] = transaction_id
 
-    log.info('Method=BeforeRequest Transaction=%s RequestMethod=%s URL=%s ClientIP=%s Method=%s Proto=%s UserAgent=%s Arguments=%s Form=%s Data=%s'
+    log.info('Method=BeforeRequest Transaction=%s RequestMethod=%s URL=%s ClientIP=%s Method=%s Proto=%s UserAgent=%s Arguments=%s Data=%s'
              % (transaction_id,
                 request.method,
                 request.url,
@@ -25,7 +25,7 @@ def log_request():
                 request.headers.environ['SERVER_PROTOCOL'],
                 request.headers.environ['HTTP_USER_AGENT'] if 'HTTP_USER_AGENT' in request.headers.environ else 'NULL',
                 request.args,
-                request.form,
+                # request.form,
                 request.data.decode('utf-8')))
 
 @app.route('/getuserdetails', methods=['POST'])
@@ -75,7 +75,7 @@ def getuserdetails():
 
 def loadconfig(type):
     SCRIPTPATH = os.path.dirname(os.path.realpath(__file__))
-    with open('/etc/idp/' + type + '.yml') as cfgstream:
+    with open('/etc/hippo-ldap/' + type + '.yml') as cfgstream:
         config = yaml.load(cfgstream)
         return config
 

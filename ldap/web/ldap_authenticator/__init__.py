@@ -17,7 +17,7 @@ class ldap_authenticator:
     def verify_user(self, transaction_id, username, password):
         log_header = 'Method=VerifyUser Transaction=%s' % transaction_id
 
-        self.log.info(log_header + ' Message=Starting LDAP Search Bind Path=%s' % (self.service_bind_dn))
+        self.log.info(log_header + ' Message=Starting LDAP Search Bind Server=%s Path=%s' % (self.directory_server, self.service_bind_dn))
         conn = ldap3.Connection(self.directory_server, self.service_bind_dn, password=self.service_password)
 
         self.log.info(log_header + ' Username=%s' % username)

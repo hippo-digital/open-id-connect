@@ -16,6 +16,11 @@
 
 - name: Allow HTTPS
   iptables: chain=INPUT protocol=tcp destination_port=443 jump=ACCEPT
+  when: type == "idp"
+
+- name: Allow LDAP
+  iptables: chain=INPUT protocol=tcp destination_port=389 jump=ACCEPT
+  when: type == "ldap"
 
 - name: Block all incoming
   iptables: chain=INPUT jump=DROP
