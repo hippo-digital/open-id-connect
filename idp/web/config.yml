@@ -3,7 +3,7 @@ issuer:
     address: http://10.211.55.2:5000
 
 idservice:
-    address: http://localhost:5001/getuserdetails
+    address: http://10.211.55.8:5001/getuserdetails
 
 claimattributes:
     sn: family_name

@@ -1,14 +1,8 @@
 ---
-# Basic configuration for the IDP
-issuer:
-    # The base URL for the published IDP service, i.e. where clients will be pointed to
-    address: https://login.hippo.digital
-
-
 # Configuration for the LDAP directory where user objects are held
 idstore:
     # IP address of the LDAP server
-    address: 10.211.55.8
+    address: 127.0.0.1
 
     # TCP port for the LDAP service
     port: 389
@@ -31,21 +25,7 @@ idstore:
 # List of attributes that need to be read for the user object and added to the claim as
 #  part of the JW token passed to the consuming application
 claimattributes:
-  - sn
-  - givenName
-  - mail
-  - employeeNumber
-
-
-# Configuration for connection to the Redis host.  In single server configurations this
-#  would normally be left in the default configuration of localhost:6379
-sessionstore:
-    address: localhost
-    port: 6379
-
-
-# Session configuration for the JW token
-session:
-    # The length of time in seconds that a login session will be valid for
-    jwtexpiryseconds: 28800
-
+    sn: family_name
+    givenName: given_name
+    mail: email
+    employeeNumber: employee_number

@@ -32,6 +32,9 @@
 - name: Install PyYAML
   pip: name=pyyaml state=present virtualenv=/home/{{ type }}service/open-id-connect/{{ type }}/web virtualenv_python=python3
 
+- name: Install Requests
+  pip: name=requests state=present virtualenv=/home/{{ type }}service/open-id-connect/{{ type }}/web virtualenv_python=python3
+
 - name: Install PyRedis
   pip: name=redis state=present virtualenv=/home/{{ type }}service/open-id-connect/{{ type }}/web virtualenv_python=python3
 
@@ -66,16 +69,16 @@
   copy: src=hippo-idp.service dest=/etc/systemd/system/hippo-{{ type }}.service mode=0755
 
 - name: SSL Private Key
-  copy: src=login.hippo.digital.key dest=/etc/{{ type }} mode=0600
+  copy: src=login.hippo.digital.key dest=/etc/hippo-{{ type }} mode=0600
 
 - name: SSL Certificate
-  copy: src=login.hippo.digital.pem dest=/etc/{{ type }} mode=0600
+  copy: src=login.hippo.digital.pem dest=/etc/hippo-{{ type }} mode=0600
 
 - name: Basic config.yml
-  copy: src=config.yml dest=/etc/{{ type }} mode=0644
+  copy: src=config.yml dest=/etc/hippo-{{ type }} mode=0644
 
 - name: Basic clients.yml
-  copy: src=clients.yml dest=/etc/{{ type }} mode=0644
+  copy: src=clients.yml dest=/etc/hippo-{{ type }} mode=0644
 
 - name: Create symlink to login.hippo.digital
   file: src=/etc/nginx/sites-available/hippo-{{ type }} dest=/etc/nginx/sites-enabled/hippo-{{ type }} state=link
