@@ -75,7 +75,7 @@
   copy: src=login.hippo.digital.pem dest=/etc/hippo-{{ type }} mode=0600
 
 - name: Basic config.yml
-  template: src=config-{{ type }}.yml dest=/etc/hippo-{{ type }} mode=0644
+  template: src=config-{{ type }}.yml dest=/etc/hippo-{{ type }}/config.yml mode=0644
 
 - name: Basic clients.yml
   template: src=clients.yml dest=/etc/hippo-{{ type }} mode=0644
