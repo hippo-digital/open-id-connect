@@ -51,22 +51,22 @@
   pip: name=python-jose state=present virtualenv=/home/{{ type }}service/open-id-connect/{{ type }}/web virtualenv_python=python3
 
 - name: Create IDP Socket directory
-  file: path=/var/{{ type }} state=directory mode=0777
+  file: path=/var/hippo-{{ type }} state=directory mode=0777
 
 - name: Create IDP Logs directory
-  file: path=/var/log/{{ type }} state=directory mode=0777
+  file: path=/var/log/hippo-{{ type }} state=directory mode=0777
 
 - name: Create IDP Config directory
-  file: path=/etc/{{ type }} state=directory mode=0755
+  file: path=/etc/hippo-{{ type }} state=directory mode=0755
 
 - name: Set app directory permissions
   file: path=/home/{{ type }}service/open-id-connect state=directory owner={{ type }}service group={{ type }}service recurse=yes
 
 - name: IDP Config
-  copy: src=hippo-idp dest=/etc/nginx/sites-available/hippo-{{ type }} mode=0644
+  template: src=hippo-idp dest=/etc/nginx/sites-available/hippo-{{ type }} mode=0644
 
 - name: IDP Service Config
-  copy: src=hippo-idp.service dest=/etc/systemd/system/hippo-{{ type }}.service mode=0755
+  template: src=hippo-idp.service dest=/etc/systemd/system/hippo-{{ type }}.service mode=0755
 
 - name: SSL Private Key
   copy: src=login.hippo.digital.key dest=/etc/hippo-{{ type }} mode=0600
@@ -75,10 +75,10 @@
   copy: src=login.hippo.digital.pem dest=/etc/hippo-{{ type }} mode=0600
 
 - name: Basic config.yml
-  copy: src=config.yml dest=/etc/hippo-{{ type }} mode=0644
+  template: src=config-{{ type }}.yml dest=/etc/hippo-{{ type }} mode=0644
 
 - name: Basic clients.yml
-  copy: src=clients.yml dest=/etc/hippo-{{ type }} mode=0644
+  template: src=clients.yml dest=/etc/hippo-{{ type }} mode=0644
 
 - name: Create symlink to login.hippo.digital
   file: src=/etc/nginx/sites-available/hippo-{{ type }} dest=/etc/nginx/sites-enabled/hippo-{{ type }} state=link
