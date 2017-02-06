@@ -8,6 +8,6 @@ server {
 
     location / {
         include uwsgi_params;
-        uwsgi_pass unix:/var/hippo-{{ type }}/hippo-idp.sock;
+        uwsgi_pass unix:/var/hippo-{{ type }}/hippo-{{ type }}.sock;
     }
 }
