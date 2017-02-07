@@ -28,7 +28,6 @@ def log_request():
                 request.headers.environ['SERVER_PROTOCOL'],
                 request.headers.environ['HTTP_USER_AGENT'] if 'HTTP_USER_AGENT' in request.headers.environ else 'NULL',
                 request.args,
-                # request.form,
                 request.data.decode('utf-8')))
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -47,7 +46,6 @@ def login():
             and 'client_id' in fields \
             and 'redirect_uri' in fields \
             and 'state' in fields:
-        # log.info(log_header + ' Message=Creating Session')
 
         if not check_client_auth(fields['client_id']):
             log.info(log_header + ' Message=ClientID not recognised ClientID=%s' % fields['client_id'])
@@ -131,37 +129,6 @@ def login():
                 return render_template('auth.html', header_string='code=%s' % (ses.code), username_value=username,
                                        username_error='A service failure has occured.  Please contact your systems administrator.',
                                        password_error='')
-
-
-                # auth = ldapauth.verify_user(request.environ['transaction_id'], username, password)
-            #
-            # log.info(log_header + ' Message=LDAP validation returned AuthStatus=%s' % auth['success'])
-            #
-            # if not auth['success']:
-            #     log.info(log_header + ' Message=Returning login form with auth failure status')
-            #     return render_template('auth.html', header_string='code=%s' % (ses.code), username_value=username,
-            #                            username_error='Incorrect username and/or password entered, please try again.',
-            #                            password_error='')
-            #
-            # log.info(log_header + ' Message=Setting username claim Username=%s' % username)
-            # ses.set_claims({'sub': username})
-            #
-            # log.info(log_header + ' Message=Setting other claims Claims=%s' % auth['claims'])
-            # ses.set_claims(auth['claims'])
-            #
-            # response_uri = ses.redirect_uri
-            #
-            # if hasattr(ses, 'state'):
-            #     response_uri = '%s%scode=%s&state=%s' % (response_uri, '&' if '?' in ses.redirect_uri else '?', ses.code, ses.state)
-            # else:
-            #     response_uri = '%s%scode=%s' % (response_uri, '&' if '?' in ses.redirect_uri else '?', ses.code)
-            #
-            # response = redirect(response_uri, code=302)
-            # log.info(log_header + ' Message=Response prepared URI=%s' % (response.location))
-            #
-            # ses.save()
-            #
-            # return response
 
         except Exception as e:
             log.error("Failed to validate user in ldap", e)
