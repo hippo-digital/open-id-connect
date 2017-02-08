@@ -22,3 +22,8 @@ session:
     # The length of time in seconds that a login session will be valid for
     jwtexpiryseconds: 28800
 
+
+# Configure the sub field of the token to be replaced with another ID field,
+#  or remove to use the username as to sub
+attributes:
+    subject: id_number

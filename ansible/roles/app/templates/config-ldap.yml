@@ -24,8 +24,10 @@ idstore:
 
 # List of attributes that need to be read for the user object and added to the claim as
 #  part of the JW token passed to the consuming application
-claimattributes:
-    sn: family_name
-    givenName: given_name
-    mail: email
-    employeeNumber: employee_number
+attributes:
+    claims:
+        sn: family_name
+        givenName: given_name
+        mail: email
+        employeeNumber: id_number
+

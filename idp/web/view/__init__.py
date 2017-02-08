@@ -180,7 +180,8 @@ def token():
                           request.form['redirect_uri'],
                           request.form['client_id'],
                           request.form['client_secret'],
-                          jwt_expiry_seconds)
+                          jwt_expiry_seconds,
+                          subject_attribute_name)
 
         try:
             log.info(log_header + ' Message=Getting token')
@@ -284,6 +285,10 @@ redis_port = config['sessionstore']['port']
 redis_address = config['sessionstore']['address']
 idservice = config['idservice']['address']
 jwt_expiry_seconds = config['session']['jwtexpiryseconds']
+subject_attribute_name = None
+
+if 'subject' in config['attributes']:
+    subject_attribute_name = config['attributes']['subject']
 
 storage(redis_address, redis_port)
 

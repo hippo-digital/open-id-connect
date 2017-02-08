@@ -5,11 +5,13 @@ issuer:
 idservice:
     address: http://10.211.55.8:5001/getuserdetails
 
-claimattributes:
-    sn: family_name
-    givenName: given_name
-    mail: email
-    employeeNumber: employee_number
+attributes:
+    claims:
+        sn: family_name
+        givenName: given_name
+        mail: email
+        employeeNumber: id_number
+    subject: id_number
 
 sessionstore:
     address: localhost

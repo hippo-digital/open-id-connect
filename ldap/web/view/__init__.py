@@ -89,7 +89,7 @@ idstore_address = config['idstore']['address']
 idstore_serviceaccountdn = config['idstore']['serviceaccountdn']
 idstore_serviceaccountpassword = config['idstore']['serviceaccountpassword']
 idstore_basesearchdn = config['idstore']['basesearchdn']
-claim_attributes = config['claimattributes']
+claim_attributes = config['attributes']['claims']
 
 ldapauth = ldap_authenticator(idstore_address, idstore_port, idstore_serviceaccountdn, idstore_serviceaccountpassword, idstore_basesearchdn, claim_attributes)
 
