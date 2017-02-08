@@ -6,13 +6,14 @@ import time
 class tokenrequest:
     issuer_address = 'http://localhost:5000'
 
-    def __init__(self, grant_type, code, redirect_uri, client_id, client_secret, jwt_expiry_seconds):
+    def __init__(self, grant_type, code, redirect_uri, client_id, client_secret, jwt_expiry_seconds, subject_attribute_name=None):
         self.grant_type = grant_type
         self.code = code
         self.redirect_uri = redirect_uri
         self.client_id = client_id
         self.client_secret = client_secret
         self.jwt_expiry_seconds = jwt_expiry_seconds
+        self.subject_attribute_name = subject_attribute_name
 
     def get(self):
         self.auth_flow_session = auth_flow_session()
@@ -45,6 +46,10 @@ class tokenrequest:
 
         for key, value in self.auth_flow_session.claims.items():
             claims[key] = self.auth_flow_session.claims[key]
+
+        if self.subject_attribute_name != None:
+            if self.subject_attribute_name in self.auth_flow_session.claims:
+                claims['sub'] = self.auth_flow_session.claims[self.subject_attribute_name]
 
         if hasattr(self.auth_flow_session, 'nonce'):
             claims['nonce'] = self.auth_flow_session.nonce
