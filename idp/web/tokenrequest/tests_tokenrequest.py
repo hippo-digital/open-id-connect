@@ -24,10 +24,10 @@ class tests_tokenrequest(unittest.TestCase):
             inst.aud = 'client1'
             inst.claims = self.test_claims_1
 
-            tr = tokenrequest('1', '2', '3', 'client1', 'secret', 6)
+            tr = tokenrequest('1', '2', '3', 'client1', 'cli.secret', 6)
 
             token = json.loads(tr.get())
-            jw_token = jwt.decode(token['id_token'], 'secret', algorithms='HS256', audience='client1')
+            jw_token = jwt.decode(token['id_token'], 'cli.secret', algorithms='HS256', audience='client1')
 
             self.assertEqual(jw_token['sub'], 'test_subject')
 

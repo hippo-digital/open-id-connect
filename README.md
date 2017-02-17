@@ -43,8 +43,8 @@ git clone https://github.com/hippodigital/open-id-connect.git
 ssh user1@127.0.0.1   # Type *yes* to accept, then press *Ctrl+C*
 
 # Run Ansible against the host 
-cd open-id-connect/idp/ansible
-make install limit=127.0.0.1  # When prompted, enter the user1 password twice
+cd open-id-connect/ansible
+make install-idp limit=127.0.0.1  # When prompted, enter the user1 password twice
 ````
 
 ## Configuration
@@ -55,7 +55,7 @@ make install limit=127.0.0.1  # When prompted, enter the user1 password twice
 The configuration will need to be altered to reflect the local environment setup.  
 
 ````
-sudo vim /etc/idp/config.yml
+sudo vim /etc/hippo-idp/config.yml
 ````
 
 The default config.yml is self-documented, but included here for completeness.
@@ -68,36 +68,9 @@ issuer:
     address: https://login.hippo.digital
 
 
-# Configuration for the LDAP directory where user objects are held
-idstore:
-    # IP address of the LDAP server
-    address: 10.211.55.8
-
-    # TCP port for the LDAP service
-    port: 389
-
-    # The service requires a low privileged (read only, search) service account to
-    #  conduct an initial query against the directory upon user authentication
-
-    # DN for the service account used to conduct user searches
-    serviceaccountdn: 'cn=admin,dc=hd,dc=local'
-
-    # Password for the service account used to conduct user searches
-    serviceaccountpassword: 'Password1'
-
-
-    # DN for the base OU under which all user objects are stored.  This will be used
-    #  as the root for a search each time a user logs in
-    basesearchdn: 'dc=hd,dc=local'
-
-
-# List of attributes that need to be read for the user object and added to the claim as
-#  part of the JW token passed to the consuming application
-claimattributes:
-  - sn
-  - givenName
-  - mail
-  - employeeNumber
+# URL for the LDAP GetUserDetails service
+idservice:
+    address: http://localhost:5001/getuserdetails
 
 
 # Configuration for connection to the Redis host.  In single server configurations this
@@ -111,6 +84,12 @@ sessionstore:
 session:
     # The length of time in seconds that a login session will be valid for
     jwtexpiryseconds: 28800
+
+
+# Configure the sub field of the token to be replaced with another ID field,
+#  or remove to use the username as to sub
+attributes:
+    subject: id_number
 ````
 
 ### Configure Client(s)
@@ -135,7 +114,7 @@ Once you have the hash you need to ensure that it is in lower case.
 Edit the /etc/idp/clients.yml file and update it with the required client details.
 
 ````
-sudo vim /etc/idp/clients.yml
+sudo vim /etc/hippo-idp/clients.yml
 ````
 Under the **clients** section add a line for each consuming client.  Each line should be formatted as:
 

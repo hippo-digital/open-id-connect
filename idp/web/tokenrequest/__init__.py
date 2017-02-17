@@ -18,6 +18,10 @@ class tokenrequest:
     def get(self):
         self.auth_flow_session = auth_flow_session()
         self.auth_flow_session.load(self.code)
+
+        if not self.auth_flow_session.authenticated:
+            raise NotAuthenticatedException
+
         self.auth_flow_session.create_access_token()
 
         response = {}
@@ -66,6 +70,10 @@ class NonMatchingRedirectException(Exception):
         None
 
 class InvalidCodeException(Exception):
+    def __init__(self):
+        None
+
+class NotAuthenticatedException(Exception):
     def __init__(self):
         None
 

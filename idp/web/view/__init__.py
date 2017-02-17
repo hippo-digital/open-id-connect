@@ -1,6 +1,6 @@
 from flask import Flask, request, render_template, redirect, abort
 from auth_flow_session import auth_flow_session
-from tokenrequest import tokenrequest, NonMatchingRedirectException, InvalidCodeException
+from tokenrequest import tokenrequest, NonMatchingRedirectException, InvalidCodeException, NotAuthenticatedException
 from storage import storage
 import logging, os
 import yaml
@@ -101,6 +101,8 @@ def login():
                 log.info(log_header + ' Message=LDAP validation returned Content=%s' % ldap_content)
 
                 if ldap_content['success']:
+                    ses.authenticated = True
+
                     ses.set_claims({'sub': ldap_content['sub']})
                     ses.set_claims(ldap_content['claims'])
 
@@ -192,6 +194,9 @@ def token():
         except InvalidCodeException as e:
             log.info(log_header + ' Message=Invalidated Code used Code=%s' % request.form['code'])
             return json.dumps({'error': 'invalid_request'}), 400
+        except NotAuthenticatedException as e:
+            log.info(log_header + ' Message=User is not authenticated')
+            return json.dumps({'error': 'invalid_grant'}), 400
 
         log.info(log_header + ' Message=Returning token Token=%s' % token)
         return token

@@ -19,7 +19,8 @@ class tests_view(unittest.TestCase):
                                              'givenName': 'Test',
                                              'mail': 'testuser@test.org'},
                                   'client_id': 'test1',
-                                  'code_valid': True}
+                                  'code_valid': True,
+                                  'authenticated': True}
 
         self.authorisation_request_1 = {'client_id': 'test-1',
                                         'redirect_uri': 'http://abc',
@@ -268,11 +269,6 @@ class tests_view(unittest.TestCase):
         storage.set('sessions_0123456789012345', json.dumps(self.session_content_1))
 
         with mock.patch('requests.post', side_effect=self.mocked_requests_post_success) as mock_getuserdetails:
-
-        # with mock.patch('ldap_authenticator.ldap_authenticator.verify_user') as mock_verifyuser:
-        #     mock_verifyuser.return_value = {'success': True, 'claims': {'givenName': 'Test', 'sn': 'User',
-        #                                                                 'mail': 'testuser@test.com'}}
-
             returned_result = self.app.post('/login?code=0123456789012345',
                                             data={'username': 'test', 'password': '123'})
 
@@ -295,7 +291,7 @@ class tests_view(unittest.TestCase):
             self.assertEqual(200, returned_result.status_code)
             self.assertIn('Incorrect username and/or password entered, please try again.', body)
 
-    def test_loginAndToken_whenCalledWithValidCodeTwice_returns4xx(self):
+    def test_loginAndToken_whenCalledWithValidCodeTwice_returns400InvalidRequest(self):
         storage.hset('clients', 'test-1', '0123456789')
         storage.set('sessions_0123456789012345', json.dumps(self.session_content_1))
 
@@ -330,14 +326,27 @@ class tests_view(unittest.TestCase):
             self.assertIn('error', error_dict)
             self.assertEqual(error_dict['error'], 'invalid_request')
 
-    # def test_temp_ldap_bind(self):
-    #     from ldap_authenticator import ldap_authenticator
-    #     service_bind_dn = 'cn=admin,dc=hd,dc=local'
-    #     service_password = 'Password1'
-    #     search_base_dn = 'dc=hd,dc=local'
-    #
-    #     ldap = ldap_authenticator('10.211.55.8', 389, service_bind_dn, service_password, search_base_dn)
-    #     res = ldap.verify_user('abc', 'brett', 'Password1')
+    def test_loginAndToken_whenTokenCalledBeforeAuth_returns400InvalidGrant(self):
+        req = self.authorisation_request_1
+        storage.hset('clients', 'test-1', '0123456789')
+
+        login_result = self.app.post('/login', data=req)
+        self.assertEqual(200, login_result.status_code)
+        body = login_result.data.decode('utf-8')
+
+        code = re.search('(?:code=)(\w*)', body).group(1)
+
+        token_result = self.app.post('/token', data={'client_id': 'test-1',
+                                              'client_secret': '0123456789',
+                                              'code': code,
+                                              'grant_type': 'authorization_code',
+                                              'redirect_uri': 'http://abc'})
+
+        self.assertEqual(400, token_result.status_code)
+        body = token_result.data.decode('utf-8')
+        error_dict = json.loads(body)
+        self.assertIn('error', error_dict)
+        self.assertEqual(error_dict['error'], 'invalid_grant')
 
 
 if __name__ == "__main__":

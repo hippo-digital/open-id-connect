@@ -23,6 +23,7 @@ class auth_flow_session:
         self.state = state
         self.nonce = nonce
         self.code_valid = True
+        self.authenticated = False
 
         self.claims = {}
         self.code = ''.join([random.choice(string.ascii_letters + string.digits) for n in range(16)]) #uuid.uuid4().hex
