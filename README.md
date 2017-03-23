@@ -44,7 +44,7 @@ ssh user1@127.0.0.1   # Type *yes* to accept, then press *Ctrl+C*
 ````
 
 
-### Run Ansible against the host
+## Run Ansible against the host
 
 For the IDP server:
 
