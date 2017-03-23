@@ -9,7 +9,7 @@ body {
 }
 
 .loginbox {
-    background: white;
+    background: #f8f8f8;
     /*height: 400px;*/
     width: 100%;
     max-width: 600px;
@@ -25,10 +25,11 @@ body {
 
 .topbanner {
     height: 90px;
-    background: #007599;
+    background: #ffffff;
     vertical-align: middle;
     text-align: center;
     margin-bottom: 10px;
+    border-bottom: solid 1px #c0c0c0;
 }
 
 .toplogo {
@@ -48,7 +49,7 @@ body {
 }
 
 .loginbutton {
-    background: #007599;
+    background: #005EB8;
     color: white;
     font-size: 28px;
     height: 60px;
@@ -60,7 +61,7 @@ body {
 }
 
 .loginbutton:hover {
-    background: #00809f;
+    background: #0072CE;
     box-shadow: 0 0 10px #0cf;
 }
 
@@ -82,4 +83,29 @@ body {
 .errortext {
     color: red;
     /*visibility: hidden;*/
+}
+
+.footer {
+    height: 50px;
+    vertical-align: middle;
+    text-align: center;
+    border-bottom: solid 1px #c0c0c0;
+    color: #383032;
+    font-size: 12px;
+    margin-top: 10px;
+}
+
+.footertext {
+    vertical-align: middle;
+    text-align: center;
+    color: #383032;
+    font-size: 12px;
+    display: inline;
+}
+
+.footerlogo {
+    vertical-align: middle;
+    height: 30px;
+    display: inline;
+
 }
