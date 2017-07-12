@@ -2,33 +2,33 @@
     <html lang="en">
         <head>
             <title>Torbay and South Devon NHS Foundation Trust Login</title>
-            <meta name="viewport" content="width=device-width, initial-scale=1">
+            <meta name="viewport" content="width=device-width, initial-scale=1" />
             <link rel="stylesheet" media="screen" href="../static/default.css" />
-            <link rel="stylesheet" media="print" type="text/css" href="./css/main-print.css">
+            <link rel="stylesheet" media="print" type="text/css" href="./css/main-print.css" />
         </head>
         <body>
             <div class="loginbox">
                 <div class="topbanner">
-                    <img class="toplogo" src="../static/tsdnhsfd.png">
+                    <img class="toplogo" src="../static/tsdnhsfd.png" />
                 </div>
 
                 <form action="/login?{{ header_string }}" method="POST">
                     <div class="inputarea">
-                        <input class="inputbox" type="text" name="username" placeholder="Username" value="{{ username_value }}"><br/>
+                        <input class="inputbox" type="text" name="username" placeholder="Username" value="{{ username_value }}" /><br/>
                         <div class="errortext" id="usernameerror">{{ username_error }}</div>
                     </div>
 
                     <div class="inputarea">
-                        <input class="inputbox" type="password" name="password" placeholder="Password"><br/>
+                        <input class="inputbox" type="password" name="password" placeholder="Password" /><br/>
                         <div class="errortext" id="passworderror">{{ password_error }}</div>
                     </div>
 
-                    <input class="loginbutton" type="submit" value="Log in"><br/>
+                    <input class="loginbutton" type="submit" value="Log in" /><br/>
                 </form>
 
                 <div class="footer">
                     <div class="footertext">Lean-IDP, provided by</div>
-                    <a href="http://www.hippodigital.co.uk"><img class="footerlogo" src="../static/hippodigitallogo250x50.png"></a>
+                    <a href="http://www.hippodigital.co.uk"><img class="footerlogo" src="../static/hippodigitallogo250x50.png" /></a>
                 </div>
             </div>
         </body>
