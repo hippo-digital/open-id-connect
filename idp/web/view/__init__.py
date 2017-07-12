@@ -1,6 +1,6 @@
 from flask import Flask, request, render_template, redirect, abort
 from auth_flow_session import auth_flow_session
-from tokenrequest import tokenrequest, NonMatchingRedirectException, InvalidCodeException, NotAuthenticatedException
+from tokenrequest import tokenrequest, NonMatchingRedirectException, InvalidCodeException, NotAuthenticatedException, SubjectMissingException
 from storage import storage
 import logging, os
 import yaml
@@ -196,6 +196,9 @@ def token():
             return json.dumps({'error': 'invalid_request'}), 400
         except NotAuthenticatedException as e:
             log.info(log_header + ' Message=User is not authenticated')
+            return json.dumps({'error': 'invalid_grant'}), 400
+        except SubjectMissingException as e:
+            log.info(log_header + ' Message=Subject field was missing')
             return json.dumps({'error': 'invalid_grant'}), 400
 
         log.info(log_header + ' Message=Returning token Token=%s' % token)

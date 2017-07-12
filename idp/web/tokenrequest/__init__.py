@@ -54,6 +54,8 @@ class tokenrequest:
         if self.subject_attribute_name != None:
             if self.subject_attribute_name in self.auth_flow_session.claims:
                 claims['sub'] = self.auth_flow_session.claims[self.subject_attribute_name]
+            else:
+                raise(SubjectMissingException)
 
         if hasattr(self.auth_flow_session, 'nonce'):
             claims['nonce'] = self.auth_flow_session.nonce
@@ -77,3 +79,6 @@ class NotAuthenticatedException(Exception):
     def __init__(self):
         None
 
+class SubjectMissingException(Exception):
+    def __init__(self):
+        None
