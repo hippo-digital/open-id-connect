@@ -17,7 +17,8 @@ class tests_view(unittest.TestCase):
                                   'claims': {'sub': 'Test User',
                                              'sn': 'User',
                                              'givenName': 'Test',
-                                             'mail': 'testuser@test.org'},
+                                             'mail': 'testuser@test.org',
+                                             'id_number': '123456'},
                                   'client_id': 'test1',
                                   'code_valid': True,
                                   'authenticated': True}
@@ -41,7 +42,7 @@ class tests_view(unittest.TestCase):
                                     'sn': 'Smith',
                                     'givenName': 'Keith',
                                     'mail': 'keith.smith@example.org',
-                                    'employeeNumber': '123456'
+                                    'id_number': '123456'
                                 }}
 
         self.ldap_response_failure = {'success': False}
@@ -144,6 +145,26 @@ class tests_view(unittest.TestCase):
                                               'redirect_uri': 'http://test.app/redirectpath'})
 
         self.assertEqual(200, returned_result.status_code)
+
+    def test_token_whenCalledWithUserThatDoesNotHaveAnEmployeeNumber_returns400InvalidGrant(self):
+        storage.hset('clients', 'test-1', '0123456789')
+        session = self.session_content_1.copy()
+        del(session['claims']['id_number'])
+
+        storage.set('sessions_0123456789012345', json.dumps(self.session_content_1))
+
+        returned_result = self.app.post('/token',
+                                        data={'client_id': 'test-1',
+                                              'client_secret': '0123456789',
+                                              'code': '0123456789012345',
+                                              'grant_type': 'authorization_code',
+                                              'redirect_uri': 'http://test.app/redirectpath'})
+
+        self.assertEqual(400, returned_result.status_code)
+        body = returned_result.data.decode('utf-8')
+        error_dict = json.loads(body)
+        self.assertIn('error', error_dict)
+        self.assertEqual(error_dict['error'], 'invalid_grant')
 
     def test_token_whenCalledWithNonMatchingRedirectURI_returns400InvalidGrant(self):
         storage.hset('clients', 'test-1', '0123456789')
@@ -347,8 +368,4 @@ class tests_view(unittest.TestCase):
         error_dict = json.loads(body)
         self.assertIn('error', error_dict)
         self.assertEqual(error_dict['error'], 'invalid_grant')
-
-
-if __name__ == "__main__":
-    unittest.main()
 

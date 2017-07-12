@@ -15,7 +15,7 @@ class tests_ldap_authenticator(unittest.TestCase):
     def test_verify_user_whenCalledWithValidUsernameAndPassword_returnsUserDetails(self):
         # ldap_conn = mock.patch('ldap3.Connection', entries=[''])
         with mock.patch('ldap3.Connection', entries=[user_obj()], bound=True, spec=True) as ldap_conn:
-            ldap = ldap_authenticator.ldap_authenticator('ldap://example.com', None, None, None, None, {'sn': 'family_name', 'givenName': 'given_name', 'mail': 'email', 'employeeNumber': 'id_number'})
+            ldap = ldap_authenticator.ldap_authenticator('ldap://example.com', None, None, None, [0], {'sn': 'family_name', 'givenName': 'given_name', 'mail': 'email', 'employeeNumber': 'id_number'})
             res = ldap.verify_user(0, 'user', 'password')
 
             self.assertEqual(res['success'], True)
@@ -28,14 +28,38 @@ class tests_ldap_authenticator(unittest.TestCase):
     def test_verify_user_whenCalledWithInvalidUsernameAndPassword_returnsUserDetails(self):
         # ldap_conn = mock.patch('ldap3.Connection', entries=[''])
         with mock.patch('ldap3.Connection', entries=[user_obj()], bound=False, result={'description': 'Could not bind'}, spec=True) as ldap_conn:
-            ldap = ldap_authenticator.ldap_authenticator('ldap://example.com', None, None, None, None, {'sn': 'family_name', 'givenName': 'given_name', 'mail': 'email', 'employeeNumber': 'id_number'})
+            ldap = ldap_authenticator.ldap_authenticator('ldap://example.com', None, None, None, [0], {'sn': 'family_name', 'givenName': 'given_name', 'mail': 'email', 'employeeNumber': 'id_number'})
             res = ldap.verify_user(0, 'user', 'password')
 
             self.assertEqual(res['success'], False)
             self.assertEqual(res['status'], 'Failed to bind to directory server')
 
 
-
+#     def test_multi_mock(self):
+#         from unittest.mock import Mock
+#         m = Mock('ldap_connection')
+#         m.side_effect = [ldap_response(None, True, True), ldap_response([user_obj()], True, True)]
+#
+#         ldap = ldap_authenticator.ldap_authenticator('ldap://example.com', None, None, None, None,
+#                                                      {'sn': 'family_name', 'givenName': 'given_name', 'mail': 'email',
+#                                                       'employeeNumber': 'id_number'})
+#         res = ldap.verify_user(0, 'user', 'password')
+#
+#         ldap = ldap_authenticator.ldap_authenticator('ldap://example.com', None, None, None, None,
+#                                                      {'sn': 'family_name', 'givenName': 'given_name', 'mail': 'email',
+#                                                       'employeeNumber': 'id_number'})
+#         res = ldap.verify_user(0, 'user', 'password')
+#
+#         None
+#
+#         # with mock.patch('ldap3.Connection', entries=[user_obj()], bound=True, spec=True) as ldap_conn:
+#
+#
+# class ldap_response:
+#     def __init__(self, entries, bound, spec):
+#         self.entries = entries
+#         self.bound = bound
+#         self.spec = spec
 
 class user_obj:
     def __init__(self):

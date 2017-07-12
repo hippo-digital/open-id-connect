@@ -19,7 +19,9 @@ idstore:
 
     # DN for the base OU under which all user objects are stored.  This will be used
     #  as the root for a search each time a user logs in
-    basesearchdn: 'dc=hd,dc=local'
+    basesearchdnlist:
+        - 'cn=users,dc=hd,dc=local'
+        - 'ou=users2,dc=hd,dc=local'
 
 
 # List of attributes that need to be read for the user object and added to the claim as
