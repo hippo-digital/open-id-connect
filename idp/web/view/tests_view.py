@@ -42,8 +42,7 @@ class tests_view(unittest.TestCase):
                                     'sn': 'Smith',
                                     'givenName': 'Keith',
                                     'mail': 'keith.smith@example.org',
-                                    'id_number': '123456'
-                                }}
+                                    'id_number': '123456'}}
 
         self.ldap_response_failure = {'success': False}
 
